@@ -1,11 +1,12 @@
 # Neural Network instructions:
-# input: 4 numbers (0 - 1), output: sum, multiplication
-# example: [[.1,.2,.3,.4],[1.0,2.4]]
+# input: 4 numbers (0 - 0.25), output: sum, multiplication
+# example: [[.2,.2,.2,.2],[.8,.0016]]
 
 # Help:
 # matrix multiplication - np.dot
 # initialize array - np.zeros
 # initialize random values array - np.random.uniform
+import time
 
 import numpy as np
 from activation_functions import Tanh
@@ -37,29 +38,10 @@ def make_examples(num_of_batches, examples_per_batch): # [[[][]][][]]
             inner_vector2.append([num1+num2+num3+num4, num1*num2*num3*num4])
     return vector
 
+def accuracy(right, current):
+    return 100 - np.abs(((right - current) / right) * 100)
 
-def main():
-    print('\033[1m' + "PsychoBot POC 1.0" + '\033[0m' + "\nAll rights reserved © PsychoBot 2022\n")
-    # print("1 - Train the machine\n2 - Use an existing model")
-    # ml = None
-    # choice = int(input())
-    # if choice == 1:
-    #     ml = NeuralNetwork()
-    #     examples = make_examples(20, 100)
-    #     print("Starting learning...")
-    #     print(ml.learning(examples))
-    #     print("Machine learned: " + str(len(examples) * len(examples[0])) + " Examples")
-    # else:
-    #     pass #vect = input("")
-    #
-    # print("Write 4 numbers")
-    # num1 = float(input())
-    # num2 = float(input())
-    # num3 = float(input())
-    # num4 = float(input())
-    # output = ml.activate([num1, num2, num3, num4])
-    # print("THE RESULTS:\nSum: " + str(output[0]) + "\nMultiplication: " + str(output[1]) + "\n")
-
+def machine():
     ml = NeuralNetwork()
     ml.add_layer(MiddleLayer(4, 5))
     ml.add_layer(ActivationLayer(Tanh.tanh, Tanh.tanh_derivative))
@@ -69,29 +51,83 @@ def main():
     ml.add_layer(ActivationLayer(Tanh.tanh, Tanh.tanh_derivative))
     choice = 2
     while choice == 2:
-        examples = make_examples(20, 1000)
+        examples = make_examples(200, 1000)
+        count = 0
+
+        print("Hello! 😀 I'm PsychoBot POC.\nMy current expectations are to find sum and multiplications of 4 numbers between 0 to 0.25.\n")
         for batch in examples:
             ml.train(batch)
+            count += 1
+            print('\r' + "Training 💪 - " + "{:.2f}".format(100 * (count / len(examples))) + "% | batch: " + str(
+                count) + "/" + str(len(examples)), end="")
+        print("\rTraining 💪 was completed successfully!")
 
-        print("\nInput: 0.1, 0.2, 0.1, 0.2")
-        print("Results: " + str(ml.run_model([0.1, 0.2, 0.1, 0.2])))
-        print("Wanted results: " + str([[0.1 + 0.2 + 0.1 + 0.2], [0.1*0.2*0.1*0.2]]))
-        print("\n")
+        input_data = [0.2, 0.2, 0.2, 0.2]
+        print("\nInput: " + str(input_data))
+        res = ml.run_model(input_data)
+        print("Results: " + str(res))
+        wanted_res = [[input_data[0] + input_data[1] + input_data[2] + input_data[3]],
+                      [input_data[0] * input_data[1] * input_data[2] * input_data[3]]]
+        print("Wanted results: " + str(wanted_res))
+        print("Accuracy: 1st - " + "{:.2f}".format(
+            accuracy(wanted_res[0][0], res[0][0])) + "% | 2nd - " + "{:.2f}".format(
+            accuracy(wanted_res[1][0], res[0][1])) + "%\n")
 
         print("Are the results fulfilling your satisfaction?\n1 - Yes. The student became the master\n2 - No. Learn more!")
         choice = int(input())
         if choice == 1:
             print("HURRAY!\nA NEW MASTER HAS ARRIVED...")
             print("""
-   ___                _                              _            
-  / _ \\___ _   _  ___| |__   ___     /\\/\\   __ _ ___| |_ ___ _ __ 
- / /_)/ __| | | |/ __| '_ \\ / _ \\   /    \\ / _` / __| __/ _ \\ '__|
-/ ___/\\__ \\ |_| | (__| | | | (_) | / /\\/\\ \\ (_| \\__ \\ ||  __/ |   
-\\/    |___/\__, |\\___|_| |_|\\___/  \\/    \\/\\__,_|___/\\__\\___|_|   
-           |___/                                                  
-            """)
+       ___                _                              _            
+      / _ \\___ _   _  ___| |__   ___     /\\/\\   __ _ ___| |_ ___ _ __ 
+     / /_)/ __| | | |/ __| '_ \\ / _ \\   /    \\ / _` / __| __/ _ \\ '__|
+    / ___/\\__ \\ |_| | (__| | | | (_) | / /\\/\\ \\ (_| \\__ \\ ||  __/ |   
+    \\/    |___/\__, |\\___|_| |_|\\___/  \\/    \\/\\__,_|___/\\__\\___|_|   
+               |___/                                                  
+                """)
+            time.sleep(2)
+            return ml
         if choice == 2:
-            print("i'm sorry... I'll learn more /:")
+            print("i'm sorry... I'll learn more /:\n")
+
+def main():
+    print('\033[1m' + "PsychoBot POC 1.3" + '\033[0m' + "\nAll rights reserved © PsychoBot 2022\n")
+    choice = 0
+    ml = None
+    while choice != 3:
+        print("1 - Train the machine\n2 - Use working machine\n3 - I've seen enough")
+        choice = int(input())
+        if choice == 1:
+            if ml is not None:
+                print("Training a new machine will overwrite the previous machine you've made.\nAre you sure you want to train a new one? Y/n")
+                choice = input()
+                print("")
+                if choice == "Y" or choice == "y":
+                    ml = machine()
+            else:
+                ml = machine()
+        elif choice == 2:
+            if ml is None:
+                print("There's no trained machine :(")
+            else:
+                print("\nTesting the trained machine\n\nWrite 4 numbers between 0 - 0.25:")
+                num1 = float(input())
+                num2 = float(input())
+                num3 = float(input())
+                num4 = float(input())
+
+                input_data = [num1, num2, num3, num4]
+                print("\nInput: " + str(input_data))
+                res = ml.run_model(input_data)
+                print("Results: " + str(res))
+                wanted_res = [[input_data[0] + input_data[1] + input_data[2] + input_data[3]],
+                              [input_data[0] * input_data[1] * input_data[2] * input_data[3]]]
+                print("Wanted results: " + str(wanted_res))
+                print("Accuracy: 1st - " + "{:.2f}".format(
+                    accuracy(wanted_res[0][0], res[0][0])) + "% | 2nd - " + "{:.2f}".format(
+                    accuracy(wanted_res[1][0], res[0][1])) + "%\n")
+        elif choice == 3:
+            print("Bye bye 👋")
 
 
 if __name__ == '__main__':

@@ -21,7 +21,6 @@ class NeuralNetwork:
             nudge = Cost.derivative_cost(current_output, np.array(example[1]))
             for layer in reversed(self.layers):
                 nudge = layer.backward_propagation(nudge)
-        print("Cost after one train: " + str(self.average_cost(examples)))
 
     def average_cost(self, examples):
         costs = []
