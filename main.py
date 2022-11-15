@@ -22,6 +22,7 @@ MAX_NUM = 0.25
 
 XOR_EXAMPLES = [[ [[0, 0]], [0]], [[[1, 0]], [1]], [[[0, 1]], [1]], [[[1, 1]], [0]]]
 
+
 def make_examples(num_of_batches, examples_per_batch): # [[[][]][][]]
     vector = []
     for i in range(num_of_batches):
@@ -38,8 +39,10 @@ def make_examples(num_of_batches, examples_per_batch): # [[[][]][][]]
             inner_vector2.append([num1+num2+num3+num4, num1*num2*num3*num4])
     return vector
 
+
 def accuracy(right, current):
     return 100 - np.abs(((right - current) / right) * 100)
+
 
 def machine():
     ml = NeuralNetwork()
@@ -89,6 +92,7 @@ def machine():
             return ml
         if choice == 2:
             print("i'm sorry... I'll learn more /:\n")
+
 
 def main():
     print('\033[1m' + "PsychoBot POC 1.3" + '\033[0m' + "\nAll rights reserved © PsychoBot 2022\n")

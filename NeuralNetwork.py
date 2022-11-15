@@ -1,6 +1,7 @@
 import numpy as np
 import Cost
 
+
 class NeuralNetwork:
     # Constructor
     def __init__(self):
