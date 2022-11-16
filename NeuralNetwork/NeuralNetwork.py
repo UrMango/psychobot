@@ -1,8 +1,5 @@
 import numpy as np
 import Cost
-from Layer import LayerType
-import MiddleLayer
-
 
 
 class NeuralNetwork:
