@@ -54,7 +54,7 @@ def machine():
     ml.add_layer(ActivationLayer(Tanh.tanh, Tanh.tanh_derivative))
     choice = 2
     while choice == 2:
-        examples = make_examples(200, 1000)
+        examples = make_examples(3000, 100)
         count = 0
 
         print("Hello! 😀 I'm PsychoBot POC.\nMy current expectations are to find sum and multiplications of 4 numbers between 0 to 0.25.\n")
