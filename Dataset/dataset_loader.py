@@ -4,14 +4,11 @@ import logging
 import re
 
 class Dataset:
-	df = pd.read_csv(r'go_emotions_dataset.csv')
+	df = pd.read_csv(r'E:\GitHub\hadera-801-psychobot\Dataset\go_emotions_dataset.csv')
 	last_count = 0
 
 	@staticmethod
 	def make_examples(num_of_batches, examples_per_batch):  # [[[][]][][]]
-		global last_count
-		global df
-
 		model = Dataset.get_model()
 
 		vector = []
@@ -22,11 +19,11 @@ class Dataset:
 				inner_vector.append([])
 				inner_vector2 = inner_vector[j]
 
-				while df.example_very_unclear[last_count] == 'TRUE':
-					last_count += 1
+				while Dataset.df.example_very_unclear[Dataset.last_count] == 'TRUE':
+					Dataset.last_count += 1
 
 				# sentence
-				text = df.text[last_count]
+				text = Dataset.df.text[Dataset.last_count]
 
 				regex = re.compile(r'[^a-zA-Z\s]')
 				text = regex.sub('', text)
@@ -35,7 +32,7 @@ class Dataset:
 				# sentence => array of words
 				arr = text.split(" ")
 
-				we_arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+				we_arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 				res = []
 
 				# words => word embedding
@@ -62,34 +59,34 @@ class Dataset:
 						print(word + " wasn't found on word embedding.")
 
 				# 28 feelings vector res
-				res.append(df.admiration[last_count])
-				res.append(df.amusement[last_count])
-				res.append(df.anger[last_count])
-				res.append(df.annoyance[last_count])
-				res.append(df.approval[last_count])
-				res.append(df.caring[last_count])
-				res.append(df.confusion[last_count])
-				res.append(df.curiosity[last_count])
-				res.append(df.desire[last_count])
-				res.append(df.disappointment[last_count])
-				res.append(df.disapproval[last_count])
-				res.append(df.disgust[last_count])
-				res.append(df.embarrassment[last_count])
-				res.append(df.excitement[last_count])
-				res.append(df.fear[last_count])
-				res.append(df.gratitude[last_count])
-				res.append(df.grief[last_count])
-				res.append(df.joy[last_count])
-				res.append(df.love[last_count])
-				res.append(df.nervousness[last_count])
-				res.append(df.optimism[last_count])
-				res.append(df.pride[last_count])
-				res.append(df.realization[last_count])
-				res.append(df.relief[last_count])
-				res.append(df.remorse[last_count])
-				res.append(df.sadness[last_count])
-				res.append(df.surprise[last_count])
-				res.append(df.neutral[last_count])
+				res.append(Dataset.df.admiration[Dataset.last_count])
+				res.append(Dataset.df.amusement[Dataset.last_count])
+				res.append(Dataset.df.anger[Dataset.last_count])
+				res.append(Dataset.df.annoyance[Dataset.last_count])
+				res.append(Dataset.df.approval[Dataset.last_count])
+				res.append(Dataset.df.caring[Dataset.last_count])
+				res.append(Dataset.df.confusion[Dataset.last_count])
+				res.append(Dataset.df.curiosity[Dataset.last_count])
+				res.append(Dataset.df.desire[Dataset.last_count])
+				res.append(Dataset.df.disappointment[Dataset.last_count])
+				res.append(Dataset.df.disapproval[Dataset.last_count])
+				res.append(Dataset.df.disgust[Dataset.last_count])
+				res.append(Dataset.df.embarrassment[Dataset.last_count])
+				res.append(Dataset.df.excitement[Dataset.last_count])
+				res.append(Dataset.df.fear[Dataset.last_count])
+				res.append(Dataset.df.gratitude[Dataset.last_count])
+				res.append(Dataset.df.grief[Dataset.last_count])
+				res.append(Dataset.df.joy[Dataset.last_count])
+				res.append(Dataset.df.love[Dataset.last_count])
+				res.append(Dataset.df.nervousness[Dataset.last_count])
+				res.append(Dataset.df.optimism[Dataset.last_count])
+				res.append(Dataset.df.pride[Dataset.last_count])
+				res.append(Dataset.df.realization[Dataset.last_count])
+				res.append(Dataset.df.relief[Dataset.last_count])
+				res.append(Dataset.df.remorse[Dataset.last_count])
+				res.append(Dataset.df.sadness[Dataset.last_count])
+				res.append(Dataset.df.surprise[Dataset.last_count])
+				res.append(Dataset.df.neutral[Dataset.last_count])
 
 				arr_final = []
 
@@ -100,6 +97,7 @@ class Dataset:
 
 	@staticmethod
 	def get_model():
+
 		logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
 		# use pre-trained model and use it

@@ -9,11 +9,16 @@
 import time
 
 import numpy as np
+
+from Dataset.dataset_loader import Dataset
 from activation_functions import Tanh
 import random
 from NeuralNetwork import NeuralNetwork
 from MiddleLayer import MiddleLayer
 from ActivationLayer import ActivationLayer
+from gensim import downloader
+
+import re
 
 EPOCHES = 1000
 
@@ -46,15 +51,15 @@ def accuracy(right, current):
 
 def machine():
     ml = NeuralNetwork()
-    ml.add_layer(MiddleLayer(4, 5))
+    ml.add_layer(MiddleLayer(25, 16))
     ml.add_layer(ActivationLayer(Tanh.tanh, Tanh.tanh_derivative))
-    ml.add_layer(MiddleLayer(5, 5))
+    ml.add_layer(MiddleLayer(16, 16))
     ml.add_layer(ActivationLayer(Tanh.tanh, Tanh.tanh_derivative))
-    ml.add_layer(MiddleLayer(5, 2))
+    ml.add_layer(MiddleLayer(16, 28))
     ml.add_layer(ActivationLayer(Tanh.tanh, Tanh.tanh_derivative))
     choice = 2
     while choice == 2:
-        examples = make_examples(3000, 100)
+        examples = Dataset.make_examples(3000, 100)
         count = 0
 
         print("Hello! 😀 I'm PsychoBot POC.\nMy current expectations are to find sum and multiplications of 4 numbers between 0 to 0.25.\n")
@@ -65,16 +70,43 @@ def machine():
                 count) + "/" + str(len(examples)), end="")
         print("\rTraining 💪 was completed successfully!")
 
-        input_data = [0.2, 0.2, 0.2, 0.2]
+        input_data = "wanted to downvote this, but it's not fault homie."
         print("\nInput: " + str(input_data))
-        res = ml.run_model(input_data)
+
+        regex = re.compile(r'[^a-zA-Z\s]')
+        input_data = regex.sub('', input_data)
+        input_data = input_data.lower()
+
+        # sentence => array of words
+        arr = input_data.split(" ")
+        we_arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        model = get_model()
+
+        for word in arr:
+            if (
+                    word == "was"
+                    or word == "is"
+                    or word == "am"
+                    or word == "i"
+                    or word == "are"
+                    or word == "we"
+                    or word == "them"
+                    or word == "were"
+                    or word == "they"
+                    or word == "your"
+            ):
+                continue
+
+            try:
+                word_vec = model[word]
+                for i in range(len(word_vec)):
+                    we_arr[i] += word_vec[i]
+            except Exception:
+                print(word + " wasn't found on word embedding.")
+
+        res = ml.run_model([we_arr])
         print("Results: " + str(res))
-        wanted_res = [[input_data[0] + input_data[1] + input_data[2] + input_data[3]],
-                      [input_data[0] * input_data[1] * input_data[2] * input_data[3]]]
-        print("Wanted results: " + str(wanted_res))
-        print("Accuracy: 1st - " + "{:.2f}".format(
-            accuracy(wanted_res[0][0], res[0][0])) + "% | 2nd - " + "{:.2f}".format(
-            accuracy(wanted_res[1][0], res[0][1])) + "%\n")
+        print("Wanted results: 0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0")
 
         print("Are the results fulfilling your satisfaction?\n1 - Yes. The student became the master\n2 - No. Learn more!")
         choice = int(input())
@@ -92,6 +124,13 @@ def machine():
             return ml
         if choice == 2:
             print("i'm sorry... I'll learn more /:\n")
+
+
+def get_model():
+    # use pre-trained model and use it
+    model = downloader.load('glove-twitter-25')
+
+    return model
 
 
 def main():
