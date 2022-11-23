@@ -12,11 +12,15 @@ import numpy as np
 import spacy
 
 from Dataset.dataset_loader import Dataset
-from activation_functions import Tanh, Sigmoid
+
+from NeuralNetwork.Architectures.Basic import Basic
+from NeuralNetwork.Architectures.LSTM import LSTM
+
+from NeuralNetwork.Utillities.activation_functions import Sigmoid
 import random
 from NeuralNetwork import NeuralNetwork
-from MiddleLayer import MiddleLayer
-from ActivationLayer import ActivationLayer
+from NeuralNetwork.Utillities.MiddleLayer import MiddleLayer
+from NeuralNetwork.Utillities.ActivationLayer import ActivationLayer
 from gensim import downloader
 
 import re
@@ -52,7 +56,7 @@ def accuracy(right, current):
 
 
 def machine():
-    ml = NeuralNetwork()
+    ml = NeuralNetwork(Basic())
     ml.add_layer(MiddleLayer(25, 16))
     ml.add_layer(ActivationLayer(Sigmoid.sigmoid, Sigmoid.derivative_sigmoid))
     ml.add_layer(MiddleLayer(16, 16))
@@ -73,7 +77,8 @@ def machine():
                 count) + "/" + str(len(examples)), end="")
         print("\rTraining 💪 was completed successfully!")
 
-        input_data = "So happy for [NAME]. So sad he's not here. Imagine this team with [NAME] instead of [NAME]. Ugh."
+        # input_data = "So happy for [NAME]. So sad he's not here. Imagine this team with [NAME] instead of [NAME]. Ugh."
+        input_data = "I believe it was a severe dislocation as opposed to a fracture. Regardless....poor guy...."
         print("\nInput: " + str(input_data))
 
         regex = re.compile(r'[^a-zA-Z\s]')
@@ -99,6 +104,7 @@ def machine():
 
         res = ml.run_model([we_arr])
         print("Results: " + str(res))
+        # print("Wanted results: 0,0,0,0,1,0")
         print("Wanted results: 0,0,0,0,1,0")
 
         print("Are the results fulfilling your satisfaction?\n1 - Yes. The student became the master\n2 - No. Learn more!")
