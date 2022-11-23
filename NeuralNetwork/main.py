@@ -9,9 +9,10 @@
 import time
 
 import numpy as np
+import spacy
 
 from Dataset.dataset_loader import Dataset
-from activation_functions import Tanh
+from activation_functions import Tanh, Sigmoid
 import random
 from NeuralNetwork import NeuralNetwork
 from MiddleLayer import MiddleLayer
@@ -27,6 +28,7 @@ MAX_NUM = 0.25
 
 XOR_EXAMPLES = [[ [[0, 0]], [0]], [[[1, 0]], [1]], [[[0, 1]], [1]], [[[1, 1]], [0]]]
 
+nlp = spacy.load("en_core_web_sm")
 
 def make_examples(num_of_batches, examples_per_batch): # [[[][]][][]]
     vector = []
@@ -52,14 +54,15 @@ def accuracy(right, current):
 def machine():
     ml = NeuralNetwork()
     ml.add_layer(MiddleLayer(25, 16))
-    ml.add_layer(ActivationLayer(Tanh.tanh, Tanh.tanh_derivative))
+    ml.add_layer(ActivationLayer(Sigmoid.sigmoid, Sigmoid.derivative_sigmoid))
     ml.add_layer(MiddleLayer(16, 16))
-    ml.add_layer(ActivationLayer(Tanh.tanh, Tanh.tanh_derivative))
-    ml.add_layer(MiddleLayer(16, 28))
-    ml.add_layer(ActivationLayer(Tanh.tanh, Tanh.tanh_derivative))
+    ml.add_layer(ActivationLayer(Sigmoid.sigmoid, Sigmoid.derivative_sigmoid))
+    ml.add_layer(MiddleLayer(16, 6))
+    ml.add_layer(ActivationLayer(Sigmoid.sigmoid, Sigmoid.derivative_sigmoid))
+
     choice = 2
     while choice == 2:
-        examples = Dataset.make_examples(3000, 100)
+        examples = Dataset.make_examples(300, 100)
         count = 0
 
         print("Hello! 😀 I'm PsychoBot POC.\nMy current expectations are to find sum and multiplications of 4 numbers between 0 to 0.25.\n")
@@ -70,7 +73,7 @@ def machine():
                 count) + "/" + str(len(examples)), end="")
         print("\rTraining 💪 was completed successfully!")
 
-        input_data = "wanted to downvote this, but it's not fault homie."
+        input_data = "So happy for [NAME]. So sad he's not here. Imagine this team with [NAME] instead of [NAME]. Ugh."
         print("\nInput: " + str(input_data))
 
         regex = re.compile(r'[^a-zA-Z\s]')
@@ -83,18 +86,8 @@ def machine():
         model = get_model()
 
         for word in arr:
-            if (
-                    word == "was"
-                    or word == "is"
-                    or word == "am"
-                    or word == "i"
-                    or word == "are"
-                    or word == "we"
-                    or word == "them"
-                    or word == "were"
-                    or word == "they"
-                    or word == "your"
-            ):
+            doc = Dataset.nlp(word)
+            if doc[0].is_stop:
                 continue
 
             try:
@@ -106,7 +99,7 @@ def machine():
 
         res = ml.run_model([we_arr])
         print("Results: " + str(res))
-        print("Wanted results: 0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0")
+        print("Wanted results: 0,0,0,0,1,0")
 
         print("Are the results fulfilling your satisfaction?\n1 - Yes. The student became the master\n2 - No. Learn more!")
         choice = int(input())
