@@ -1,5 +1,5 @@
 import numpy as np
-import Architecture
+from NeuralNetwork.Architectures import Architecture
 
 ArchitectureType = Architecture.ArchitectureType
 Architecture = Architecture.Architecture
@@ -10,8 +10,8 @@ class LSTM(Architecture):
         super().__init__(ArchitectureType.LSTM)
         self.layers = []
 
-    def run_model(self, input_data):
+    def run_model(self, input_data, layers):
         raise NotImplementedError
 
-    def train(self, examples):  # [[[1,2,3,4],[1,2]],[[1,2,3,4],[1,2]],[[1,2,3,4],[1,2]],[[1,2,3,4],[1,2]]]
+    def train(self, examples, layers):  # [[[1,2,3,4],[1,2]],[[1,2,3,4],[1,2]],[[1,2,3,4],[1,2]],[[1,2,3,4],[1,2]]]
         raise NotImplementedError

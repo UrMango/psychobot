@@ -1,8 +1,9 @@
-from Layer import Layer, LayerType
+from NeuralNetwork.Utillities.Layer import Layer, LayerType
 import numpy as np
 
 class ActivationLayer(Layer):
 	def __init__(self, function, derivative):
+		super().__init__()
 		self.function = function
 		self.derivative = derivative
 		self.type = LayerType.ACTIVATION

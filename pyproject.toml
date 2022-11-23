@@ -1,0 +1,23 @@
+[build-system]
+requires = ["numpy", "spacy", "gensim"]
+build-backend = ""
+
+[project]
+name = "NeuralNetwork"
+version = "0.1.0"
+authors = [
+  { name="Dolev Dilmoeny", email="dolevdilmoney@gmail.com" },
+  { name="Noam Raz", email="noamrazbusiness@gmail.com" },
+]
+description = "A Neural Network from scratch with 4 different architectures to choose from"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = ""
+"Bug Tracker" = ""

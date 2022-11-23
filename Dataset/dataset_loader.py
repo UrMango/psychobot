@@ -15,7 +15,7 @@ class Dataset:
 
 		vector = []
 		for i in range(num_of_batches):
-			print(i, "hello")
+			print("BATCH:", i, "/", num_of_batches)
 			vector.append([])
 			inner_vector = vector[i]
 			for j in range(examples_per_batch):

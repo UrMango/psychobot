@@ -12,10 +12,10 @@ class NeuralNetwork:
         self.layers.append(layer)
 
     def run_model(self, input_data):
-        return self.architecture.run_model()
+        return self.architecture.run_model(input_data, self.layers)
 
     def train(self, examples):
-        self.architecture.train()
+        self.architecture.train(examples, self.layers)
 
     def average_cost(self, examples):
         costs = []

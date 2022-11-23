@@ -1,10 +1,12 @@
-from Layer import Layer, LayerType
+from NeuralNetwork.Utillities.Layer import Layer, LayerType
 import numpy as np
 LEARNING_RATE = 0.1
 
 
 class MiddleLayer(Layer):
 	def __init__(self, input_size, output_size):
+		super().__init__()
+
 		self.weights = np.random.rand(input_size, output_size) - 0.5
 		self.bias = np.random.rand(1, output_size) - 0.5
 		self.type = LayerType.MIDDLE
