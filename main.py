@@ -61,12 +61,12 @@ def machine():
     ml.add_layer(ActivationLayer(Sigmoid.sigmoid, Sigmoid.derivative_sigmoid))
     ml.add_layer(MiddleLayer(16, 16))
     ml.add_layer(ActivationLayer(Sigmoid.sigmoid, Sigmoid.derivative_sigmoid))
-    ml.add_layer(MiddleLayer(16, 6))
+    ml.add_layer(MiddleLayer(16, 5))
     ml.add_layer(ActivationLayer(Sigmoid.sigmoid, Sigmoid.derivative_sigmoid))
 
     choice = 2
     while choice == 2:
-        examples = Dataset.make_examples(30, 100)
+        examples = Dataset.make_examples(300, 100)
         count = 0
 
         print("Hello! 😀 I'm PsychoBot.\nMy thing is sentiment analysis.\n")
@@ -77,9 +77,9 @@ def machine():
                 count) + "/" + str(len(examples)), end="")
         print("\rTraining 💪 was completed successfully!")
 
-        input_data = "So happy for [NAME]. So sad he's not here. Imagine this team with [NAME] instead of [NAME]. Ugh."
+        # input_data = "So happy for [NAME]. So sad he's not here. Imagine this team with [NAME] instead of [NAME]. Ugh."
         # input_data = "I believe it was a severe dislocation as opposed to a fracture. Regardless....poor guy...."
-        # input_data = "Wtf is this lmao god I hate reddit"
+        input_data = "Wtf is this lmao god I hate reddit"
         print("\nInput: " + str(input_data))
 
         regex = re.compile(r'[^a-zA-Z\s]')
@@ -105,9 +105,9 @@ def machine():
 
         res = ml.run_model([we_arr])
         print("Results: " + str(res))
-        print("Wanted results: 0,0,0,0,1,0")
         # print("Wanted results: 0,0,0,0,1,0")
-        # print("Wanted results: 1,0,0,0,0,0")
+        # print("Wanted results: 0,0,0,0,1,0")
+        print("Wanted results: 1,0,0,0,0,0")
 
         print("Are the results fulfilling your satisfaction?\n1 - Yes. The student became the master\n2 - No. Learn more!")
         choice = int(input())

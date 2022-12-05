@@ -10,8 +10,21 @@ class Dataset:
 	nlp = spacy.load("en_core_web_sm")
 
 	@staticmethod
-	def make_examples(num_of_batches, examples_per_batch):  # [[[][]][][]]
+	def make_examples(num_of_batches, examples_per_batch):
+		"""
+		Makes examples by a specified number of batches and examples per batch
+		Number:param num_of_batches:
+		Number:param examples_per_batch:
+		:return:
+		"""
 		model = Dataset.get_model()
+
+		anger = 0
+		disgust = 0
+		fear = 0
+		joy = 0
+		sadness = 0
+		neutral = 0
 
 		vector = []
 		for i in range(num_of_batches):
@@ -23,17 +36,31 @@ class Dataset:
 				inner_vector2 = inner_vector[j]
 
 				while (
-					Dataset.df.example_very_unclear[Dataset.last_count] == 'TRUE' and
-					Dataset.df.anger[Dataset.last_count] == 0
+					Dataset.df.example_very_unclear[Dataset.last_count] == 'TRUE'
+					and Dataset.df.anger[Dataset.last_count] == 0
 					and Dataset.df.disgust[Dataset.last_count] == 0
 					and Dataset.df.fear[Dataset.last_count] == 0
 					and Dataset.df.joy[Dataset.last_count] == 0
-					and Dataset.df.sadness[Dataset.last_count] == 0
-					and Dataset.df.neutral[Dataset.last_count] == 0):
+					and Dataset.df.sadness[Dataset.last_count] == 0):
+					#and Dataset.df.neutral[Dataset.last_count] == 0):
+					print(Dataset.df.anger[Dataset.last_count], Dataset.df.disgust[Dataset.last_count], Dataset.df.fear[Dataset.last_count], Dataset.df.joy[Dataset.last_count], Dataset.df.neutral[Dataset.last_count])
 					Dataset.last_count += 1
 
 				# sentence
 				text = Dataset.df.text[Dataset.last_count]
+
+				if Dataset.df.anger[Dataset.last_count] != 0:
+					anger += 1
+				if Dataset.df.disgust[Dataset.last_count] != 0:
+					disgust += 1
+				if Dataset.df.fear[Dataset.last_count] != 0:
+					fear += 1
+				if Dataset.df.joy[Dataset.last_count] != 0:
+					joy += 1
+				if Dataset.df.sadness[Dataset.last_count] != 0:
+					sadness += 1
+				# if Dataset.df.neutral[Dataset.last_count] != 0:
+					# neutral += 1
 
 				regex = re.compile(r'[^a-zA-Z\s]')
 				text = regex.sub('', text)
@@ -48,7 +75,7 @@ class Dataset:
 				# words => word embedding
 				for word in arr:
 					doc = Dataset.nlp(word)
-					if doc[0].is_stop:
+					if doc and doc[0].is_stop:
 						continue
 
 					try:
@@ -56,21 +83,24 @@ class Dataset:
 						for k in range(len(word_vec)):
 							we_arr[k] += word_vec[k]
 					except Exception:
-						print(word + " wasn't found on word embedding.")
+						pass
+						# print(word + " wasn't found on word embedding.")
 
-				# 28 feelings vector res
+				# 28 (6) feelings vector res
 				res.append(Dataset.df.anger[Dataset.last_count])
 				res.append(Dataset.df.disgust[Dataset.last_count])
 				res.append(Dataset.df.fear[Dataset.last_count])
 				res.append(Dataset.df.joy[Dataset.last_count])
 				res.append(Dataset.df.sadness[Dataset.last_count])
-				res.append(Dataset.df.neutral[Dataset.last_count])
+				# res.append(Dataset.df.neutral[Dataset.last_count])
 
 				arr_final = []
 
 				inner_vector2.append([we_arr])
 				inner_vector2.append([res])
 
+				Dataset.last_count += 1
+		print(anger, disgust, fear, joy, sadness, neutral)
 		return vector
 
 	@staticmethod
