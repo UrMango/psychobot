@@ -6,16 +6,16 @@ class NeuralNetwork:
     # Constructor
     def __init__(self, architecture):
         self.architecture = architecture
-        self.layers = []
 
     def add_layer(self, layer):
-        self.layers.append(layer)
+        if self.architecture.type == ArchitectureType.BASIC:
+            self.architecture.addLayer(layer)
 
     def run_model(self, input_data):
-        return self.architecture.run_model(input_data, self.layers)
+        return self.architecture.run_model(input_data)
 
-    def train(self, examples):
-        self.architecture.train(examples, self.layers)
+    def train(self, examples, iters):
+        self.architecture.train(examples, iters)
 
     def average_cost(self, examples):
         costs = []

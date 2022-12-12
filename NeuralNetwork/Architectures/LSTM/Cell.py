@@ -2,6 +2,7 @@ import numpy as np
 
 from NeuralNetwork.Utillities.activation_functions import Sigmoid, Tanh
 
+
 class Cell():
 	@staticmethod
 	def activate(batch, prev_activation_mat, prev_cell_mat, params):
@@ -12,7 +13,7 @@ class Cell():
 		ggw = params['ggw']
 
 		# concat batch data and prev_activation matrix
-		concat_dataset = np.concatenate((batch, prev_activation_mat), axis=1)
+		concat_dataset = np.concatenate((batch, prev_activation_mat), axis=0)
 
 		# forget gate activations
 		fa = np.matmul(concat_dataset, fgw)
@@ -97,7 +98,7 @@ class Cell():
 		input_units = input_hidden_units - hidden_units
 
 		# prev activation error
-		prev_activation_error = embed_activation_error[:, input_units:]
+		prev_activation_error = embed_activation_error[input_units:]
 
 		# store lstm error
 		lstm_error = dict()
@@ -110,7 +111,7 @@ class Cell():
 
 	# calculate derivatives for single lstm cell
 	@staticmethod
-	def calculate_derivatives(lstm_error, embedding_matrix, activation_matrix):
+	def calculate_derivatives(lstm_error, activation_matrix, sentence_size):
 		# get error for single time step
 		ef = lstm_error['ef']
 		ei = lstm_error['ei']
@@ -118,9 +119,9 @@ class Cell():
 		eg = lstm_error['eg']
 
 		# get input activations for this time step
-		concat_matrix = np.concatenate((embedding_matrix, activation_matrix), axis=1)
+		concat_matrix = activation_matrix
 
-		batch_size = embedding_matrix.shape[0]
+		batch_size = sentence_size
 
 		# cal derivatives for this time step
 		dfgw = np.matmul(concat_matrix.T, ef) / batch_size

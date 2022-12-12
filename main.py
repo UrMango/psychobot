@@ -6,6 +6,7 @@
 # matrix multiplication - np.dot
 # initialize array - np.zeros
 # initialize random values array - np.random.uniform
+import json
 import time
 
 import numpy as np
@@ -14,11 +15,12 @@ import spacy
 from Dataset.dataset_loader import Dataset
 
 from NeuralNetwork.Architectures.Basic import Basic
-from NeuralNetwork.Architectures.LSTM import LSTM
+from NeuralNetwork.Architectures.LSTM.LSTM import LSTM
 
 from NeuralNetwork.Utillities.activation_functions import Sigmoid
 import random
 from NeuralNetwork.NeuralNetwork import NeuralNetwork
+from NeuralNetwork.Architectures.Architecture import ArchitectureType
 from NeuralNetwork.Utillities.MiddleLayer import MiddleLayer
 from NeuralNetwork.Utillities.ActivationLayer import ActivationLayer
 from gensim import downloader
@@ -34,80 +36,81 @@ XOR_EXAMPLES = [[ [[0, 0]], [0]], [[[1, 0]], [1]], [[[0, 1]], [1]], [[[1, 1]], [
 
 nlp = spacy.load("en_core_web_sm")
 
-def make_examples(num_of_batches, examples_per_batch): # [[[][]][][]]
-    vector = []
-    for i in range(num_of_batches):
-        vector.append([])
-        inner_vector = vector[i]
-        for j in range(examples_per_batch):
-            inner_vector.append([])
-            inner_vector2 = inner_vector[j]
-            num1 = random.uniform(MIN_NUM, MAX_NUM)
-            num3 = random.uniform(MIN_NUM, MAX_NUM)
-            num4 = random.uniform(MIN_NUM, MAX_NUM)
-            num2 = random.uniform(MIN_NUM, MAX_NUM)
-            inner_vector2.append([[num1, num2, num3, num4]])
-            inner_vector2.append([num1+num2+num3+num4, num1*num2*num3*num4])
-    return vector
+# def make_examples(num_of_batches, examples_per_batch): # [[[][]][][]]
+#     vector = []
+#     for i in range(num_of_batches):
+#         vector.append([])
+#         inner_vector = vector[i]
+#         for j in range(examples_per_batch):
+#             inner_vector.append([])
+#             inner_vector2 = inner_vector[j]
+#             num1 = random.uniform(MIN_NUM, MAX_NUM)
+#             num3 = random.uniform(MIN_NUM, MAX_NUM)
+#             num4 = random.uniform(MIN_NUM, MAX_NUM)
+#             num2 = random.uniform(MIN_NUM, MAX_NUM)
+#             inner_vector2.append([[num1, num2, num3, num4]])
+#             inner_vector2.append([num1+num2+num3+num4, num1*num2*num3*num4])
+#     return vector
 
 
 def accuracy(right, current):
     return 100 - np.abs(((right - current) / right) * 100)
 
 
+class NpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
+
 def machine():
-    ml = NeuralNetwork(Basic())
-    ml.add_layer(MiddleLayer(25, 16))
-    ml.add_layer(ActivationLayer(Sigmoid.sigmoid, Sigmoid.derivative_sigmoid))
-    ml.add_layer(MiddleLayer(16, 16))
-    ml.add_layer(ActivationLayer(Sigmoid.sigmoid, Sigmoid.derivative_sigmoid))
-    ml.add_layer(MiddleLayer(16, 5))
-    ml.add_layer(ActivationLayer(Sigmoid.sigmoid, Sigmoid.derivative_sigmoid))
+    # ml = NeuralNetwork(Basic())
+    # ml.add_layer(MiddleLayer(25, 16))
+    # ml.add_layer(ActivationLayer(Sigmoid.sigmoid, Sigmoid.derivative_sigmoid))
+    # ml.add_layer(MiddleLayer(16, 16))
+    # ml.add_layer(ActivationLayer(Sigmoid.sigmoid, Sigmoid.derivative_sigmoid))
+    # ml.add_layer(MiddleLayer(16, 5))
+    # ml.add_layer(ActivationLayer(Sigmoid.sigmoid, Sigmoid.derivative_sigmoid))
+
+    ml = NeuralNetwork(LSTM())
 
     choice = 2
     while choice == 2:
-        examples = Dataset.make_examples(300, 100)
+        examples = np.asarray(Dataset.make_examples(ArchitectureType.LSTM, 1, 3000))
+        # print(examples.shape)
+        # np.savetxt('data.csv', examples, delimiter=',')
+        #
+        # examples = np.loadtxt('data.csv', delimiter=',')
+
         count = 0
 
         print("Hello! 😀 I'm PsychoBot.\nMy thing is sentiment analysis.\n")
         for batch in examples:
-            ml.train(batch)
+            ml.train(batch, 3000)
             count += 1
             print('\r' + "Training 💪 - " + "{:.2f}".format(100 * (count / len(examples))) + "% | batch: " + str(
                 count) + "/" + str(len(examples)), end="")
         print("\rTraining 💪 was completed successfully!")
 
-        # input_data = "So happy for [NAME]. So sad he's not here. Imagine this team with [NAME] instead of [NAME]. Ugh."
-        # input_data = "I believe it was a severe dislocation as opposed to a fracture. Regardless....poor guy...."
+        # # input_data = "So happy for [NAME]. So sad he's not here. Imagine this team with [NAME] instead of [NAME]. Ugh."
+        # # input_data = "I believe it was a severe dislocation as opposed to a fracture. Regardless....poor guy...."
         input_data = "Wtf is this lmao god I hate reddit"
-        print("\nInput: " + str(input_data))
+        # input_data1 = "Yes. One of her fingers is getting a sore on it and there's concern it may push her into needing braces."
+        input_data2 = "Oh... I want to throw out after eating this food. I feel sick only by looking at this..."
+        input_data3 = "This day was so fun! I went to the theater and it was magnificent."
+        # input_data4 = "I fear from this monster. I can't sleep at night!!! I'M FREAKING OUT HELP ME"
+        # input_data5 = "My cat just passed away... It's the worst day of my life. My heart is broken bro."
 
-        regex = re.compile(r'[^a-zA-Z\s]')
-        input_data = regex.sub('', input_data)
-        input_data = input_data.lower()
-
-        # sentence => array of words
-        arr = input_data.split(" ")
-        we_arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-        model = get_model()
-
-        for word in arr:
-            doc = Dataset.nlp(word)
-            if doc and doc[0].is_stop:
-                continue
-
-            try:
-                word_vec = model[word]
-                for i in range(len(word_vec)):
-                    we_arr[i] += word_vec[i]
-            except Exception:
-                print(word + " wasn't found on word embedding.")
-
-        res = ml.run_model([we_arr])
-        print("Results: " + str(res))
-        # print("Wanted results: 0,0,0,0,1,0")
-        # print("Wanted results: 0,0,0,0,1,0")
-        print("Wanted results: 1,0,0,0,0,0")
+        check_input(input_data, ml, "1, 0, 0, 0, 0", "anger")
+        # check_input(input_data1, ml, "0, 0, 1, 0, 0", "fear")
+        check_input(input_data2, ml, "0, 1, 0, 0, 0", "disgust")
+        check_input(input_data3, ml, "0, 0, 0, 1, 0", "joy")
+        # check_input(input_data4, ml, "0, 0, 1, 0, 0", "fear")
+        # check_input(input_data5, ml, "0, 0, 0, 0, 1", "sadness")
 
         print("Are the results fulfilling your satisfaction?\n1 - Yes. The student became the master\n2 - No. Learn more!")
         choice = int(input())
@@ -126,6 +129,60 @@ def machine():
         if choice == 2:
             print("i'm sorry... I'll learn more /:\n")
 
+
+def check_input(input_data, ml, expectedres, expectedfeeling):
+    print("\nInput: " + str(input_data))
+    #
+    regex = re.compile(r'[^a-zA-Z\s]')
+    input_data = regex.sub('', input_data)
+    input_data = input_data.lower()
+
+    # sentence => array of words
+    arr = input_data.split(" ")
+    # we_arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    words_arr = []
+    #
+    model = get_model()
+    #
+    for word in arr:
+        doc = Dataset.nlp(word)
+        if doc and doc[0].is_stop:
+            continue
+
+        try:
+            word_vec = model[word]
+            words_arr.append(word_vec)
+            # for i in range(len(word_vec)):
+            #     # we_arr[i] += word_vec[i]
+            #     pass
+        except Exception:
+            print(word + " wasn't found on word embedding.")
+
+    res = ml.run_model(words_arr)
+    highest = [0, 0]
+    new_res = []
+    feelings = ["anger", "disgust", "fear", "joy", "sadness"]
+    for i in range(len(res)):
+        if res[i] > highest[0]:
+            highest[0] = res[i]
+            highest[1] = i
+
+    # for i in range(len(res)):
+    #     if i == highest[1]:
+    #         new_res.append(1)
+    #     else:
+    #         new_res.append(0)
+
+    print("Results: " + str(res))
+    print("Feeling: " + str(feelings[highest[1]]))
+    # print("Wanted results: 0,0,0,0,1,0")
+    # print("Wanted results: 0,0,0,0,1,0")
+
+    # print("Wanted results: 1,0,0,0,0,0")
+    # print("Wanted feeling: anger")
+
+    print("Wanted results: ", expectedres)
+    print("Wanted feeling: ", expectedfeeling)
 
 def get_model():
     # use pre-trained model and use it
@@ -171,7 +228,7 @@ def main():
                     accuracy(wanted_res[0][0], res[0][0])) + "% | 2nd - " + "{:.2f}".format(
                     accuracy(wanted_res[1][0], res[0][1])) + "%\n")
         elif choice == 3:
-            print("Bye bye 👋")
+            print   ("Bye bye 👋")
 
 
 if __name__ == '__main__':

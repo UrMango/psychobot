@@ -43,12 +43,14 @@ class OutputCell:
 		batch_size = activation_cache['a1'].shape[0]
 
 		# get output error
-		output_error = output_error_cache['eo']
+		output_error = np.matrix(output_error_cache['eo'])
 
 		# get input activation
-		activation = activation_cache['a']
-
+		activation = np.matrix(activation_cache['a1'])
+		# print(activation.shape)
+		# print(output_error.shape)
 		# cal derivative and summing up!
+		ad = np.matmul(activation.T, output_error)
 		dhow += np.matmul(activation.T, output_error) / batch_size
 
 		return dhow
