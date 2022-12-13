@@ -10,20 +10,24 @@ class Basic(Architecture):
 	# Constructor
 	def __init__(self):
 		super().__init__(ArchitectureType.BASIC)
+		self.layers = []
 
-	def run_model(self, input_data, layers):
+	def add_layer(self, layer):
+		self.layers.append(layer)
+
+	def run_model(self, input_data):
 		input_data_ = input_data.copy()
-		for layer in layers:
+		for layer in self.layers:
 			input_data_ = layer.forward_propagation(input_data_)
 		return input_data_
 
-	def train(self, examples, layers):  # [[[1,2,3,4],[1,2]],[[1,2,3,4],[1,2]],[[1,2,3,4],[1,2]],[[1,2,3,4],[1,2]]]
+	def train(self, examples, iters):  # [[[1,2,3,4],[1,2]],[[1,2,3,4],[1,2]],[[1,2,3,4],[1,2]],[[1,2,3,4],[1,2]]]
 		# example_nudge = []
 		# all_nudges = []
 		for example in examples:
-			current_output = self.run_model(np.array(example[0]), layers)
+			current_output = self.run_model(np.array(example[0]))
 			nudge = Cost.derivative_cost(current_output, np.array(example[1]))
-			for layer in reversed(layers):
+			for layer in reversed(self.layers):
 				nudge = layer.backward_propagation(nudge)
 		"""
 			   if layer.type == LayerType.MIDDLE:

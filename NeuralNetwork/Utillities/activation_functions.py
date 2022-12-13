@@ -7,7 +7,7 @@ class Tanh:
 
 	@staticmethod
 	def tanh_derivative(x):
-		return 1 - np.tanh(x) * np.tanh(x)
+		return 1 - x * x
 
 class Sigmoid:
 	@staticmethod
@@ -21,3 +21,16 @@ class Sigmoid:
 	@staticmethod
 	def derivative_sigmoid(x):
 		return np.exp(-x) / pow((1+np.exp(-x)), 2)
+
+class Softmax:
+	@staticmethod
+	def softmax(x):
+		return np.exp(x)/sum(np.exp(x))
+
+	@staticmethod
+	def inverse_softmax(x):
+		return np.log(x / 1 - x)
+
+	@staticmethod
+	def derivative_softmax(x):
+		return np.exp(-x) / pow((1 + np.exp(-x)), 2)

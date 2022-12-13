@@ -11,8 +11,8 @@ class Architecture:
     def __init__(self, arch_type):
         self.type = arch_type
 
-    def train(self, examples, layers):
+    def train(self, examples, iters):
         raise NotImplementedError
 
-    def run_model(self, input_data, layers):
+    def run_model(self, input_data):
         raise NotImplementedError
