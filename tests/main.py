@@ -8,7 +8,7 @@
 # initialize random values array - np.random.uniform
 import json
 import time
-
+import math
 import numpy as np
 import spacy
 
@@ -33,7 +33,7 @@ MIN_NUM = 0
 MAX_NUM = 0.25
 
 BATCHES = 1
-EXAMPLES = 100000
+EXAMPLES = 300
 
 XOR_EXAMPLES = [[ [[0, 0]], [0]], [[[1, 0]], [1]], [[[0, 1]], [1]], [[[1, 1]], [0]]]
 
@@ -90,27 +90,44 @@ def machine():
 
         print("Hello! 😀 I'm PsychoBot.\nMy thing is sentiment analysis.\n")
         for batch in examples:
-            ml.train(batch, 3000)
+            ml.train(batch, math.floor( 0.8 * EXAMPLES))
             count += 1
             print('\r' + "Training 💪 - " + "{:.2f}".format(100 * (count / len(examples))) + "% | batch: " + str(
                 count) + "/" + str(len(examples)), end="")
         print("\rTraining 💪 was completed successfully!")
+        amount_true = 0
+        feelings = ["anger", "disgust", "fear", "joy", "sadness"]
+        for batch in examples:
+            for example in batch[math.floor(0.2 * EXAMPLES):]:
+                ls = []
+                up_index = 0
+                for i in range(5):
+                    ls.append(example[1][i])
+                    if ls[i] > 0:
+                        if ls[i] > ls[i-1]:
+                            up_index = i
 
-        # # input_data = "So happy for [NAME]. So sad he's not here. Imagine this team with [NAME] instead of [NAME]. Ugh."
-        # # input_data = "I believe it was a severe dislocation as opposed to a fracture. Regardless....poor guy...."
-        input_data = "Wtf is this lmao god I hate reddit"
-        # input_data1 = "Yes. One of her fingers is getting a sore on it and there's concern it may push her into needing braces."
-        input_data2 = "Oh... I want to throw out after eating this food. I feel sick only by looking at this..."
-        input_data3 = "This day was so fun! I went to the theater and it was magnificent."
-        # input_data4 = "I fear from this monster. I can't sleep at night!!! I'M FREAKING OUT HELP ME"
-        # input_data5 = "My cat just passed away... It's the worst day of my life. My heart is broken bro."
+                if check_input(example[0], ml, str(ls), feelings[up_index]):
+                    amount_true += 1
+        print("Percents of Success: "+ (100*amount_true / 0.2*EXAMPLES) + "%" )
 
-        check_input(input_data, ml, "1, 0, 0, 0, 0", "anger")
-        # check_input(input_data1, ml, "0, 0, 1, 0, 0", "fear")
-        check_input(input_data2, ml, "0, 1, 0, 0, 0", "disgust")
-        check_input(input_data3, ml, "0, 0, 0, 1, 0", "joy")
-        # check_input(input_data4, ml, "0, 0, 1, 0, 0", "fear")
-        # check_input(input_data5, ml, "0, 0, 0, 0, 1", "sadness")
+
+
+        # # # input_data = "So happy for [NAME]. So sad he's not here. Imagine this team with [NAME] instead of [NAME]. Ugh."
+        # # # input_data = "I believe it was a severe dislocation as opposed to a fracture. Regardless....poor guy...."
+        # input_data = "Wtf is this lmao god I hate reddit"
+        # # input_data1 = "Yes. One of her fingers is getting a sore on it and there's concern it may push her into needing braces."
+        # input_data2 = "Oh... I want to throw out after eating this food. I feel sick only by looking at this..."
+        # input_data3 = "This day was so fun! I went to the theater and it was magnificent."
+        # # input_data4 = "I fear from this monster. I can't sleep at night!!! I'M FREAKING OUT HELP ME"
+        # # input_data5 = "My cat just passed away... It's the worst day of my life. My heart is broken bro."
+        #
+        # check_input(input_data, ml, "1, 0, 0, 0, 0", "anger")
+        # # check_input(input_data1, ml, "0, 0, 1, 0, 0", "fear")
+        # check_input(input_data2, ml, "0, 1, 0, 0, 0", "disgust")
+        # check_input(input_data3, ml, "0, 0, 0, 1, 0", "joy")
+        # # check_input(input_data4, ml, "0, 0, 1, 0, 0", "fear")
+        # # check_input(input_data5, ml, "0, 0, 0, 0, 1", "sadness")
 
         print("Are the results fulfilling your satisfaction?\n1 - Yes. The student became the master\n2 - No. Learn more!")
         choice = int(input())
@@ -131,6 +148,7 @@ def machine():
 
 
 def check_input(input_data, ml, expectedres, expectedfeeling):
+    return_val = False
     print("\nInput: " + str(input_data))
     #
     regex = re.compile(r'[^a-zA-Z\s]')
@@ -176,6 +194,8 @@ def check_input(input_data, ml, expectedres, expectedfeeling):
 
     print("Results: " + str(res))
     print("Feeling: " + str(feelings[highest[1]]))
+    if feelings[highest[1]] == expectedfeeling:
+        return_val = True
     # print("Wanted results: 0,0,0,0,1,0")
     # print("Wanted results: 0,0,0,0,1,0")
 
@@ -184,7 +204,7 @@ def check_input(input_data, ml, expectedres, expectedfeeling):
 
     print("Wanted results: ", expectedres)
     print("Wanted feeling: ", expectedfeeling)
-
+    return return_val
 def get_model():
     # use pre-trained model and use it
     model = downloader.load('glove-twitter-25')
@@ -193,6 +213,7 @@ def get_model():
 
 
 def main():
+
     print('\033[1m' + "PsychoBot POC 1.3" + '\033[0m' + "\nAll rights reserved © PsychoBot 2022\n")
     choice = 0
     ml = None
