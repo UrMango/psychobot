@@ -33,7 +33,7 @@ MIN_NUM = 0
 MAX_NUM = 0.25
 
 BATCHES = 1
-EXAMPLES = 300
+EXAMPLES = 3000
 
 XOR_EXAMPLES = [[ [[0, 0]], [0]], [[[1, 0]], [1]], [[[0, 1]], [1]], [[[1, 1]], [0]]]
 
@@ -90,26 +90,30 @@ def machine():
 
         print("Hello! 😀 I'm PsychoBot.\nMy thing is sentiment analysis.\n")
         for batch in examples:
-            ml.train(batch, math.floor( 0.8 * EXAMPLES))
+            ml.train(batch, math.floor(0.9 * EXAMPLES))
             count += 1
             print('\r' + "Training 💪 - " + "{:.2f}".format(100 * (count / len(examples))) + "% | batch: " + str(
                 count) + "/" + str(len(examples)), end="")
         print("\rTraining 💪 was completed successfully!")
         amount_true = 0
         feelings = ["anger", "disgust", "fear", "joy", "sadness"]
+        batchlen = 0
         for batch in examples:
-            for example in batch[math.floor(0.2 * EXAMPLES):]:
+            batchlen = len(batch)
+            for example in batch[math.floor(0.9 * EXAMPLES):]:
                 ls = []
                 up_index = 0
                 for i in range(5):
                     ls.append(example[1][i])
-                    if ls[i] > 0:
+                    if i > 0:
                         if ls[i] > ls[i-1]:
                             up_index = i
 
                 if check_input(example[0], ml, str(ls), feelings[up_index]):
                     amount_true += 1
-        print("Percents of Success: "+ (100*amount_true / 0.2*EXAMPLES) + "%" )
+
+        # print(amount_true, EXAMPLES)
+        print("Percents of Success: "+ str((100*amount_true) / batchlen) + "%" )
 
 
 
@@ -149,35 +153,35 @@ def machine():
 
 def check_input(input_data, ml, expectedres, expectedfeeling):
     return_val = False
-    print("\nInput: " + str(input_data))
+    # print("\nInput: " + str(input_data))
     #
-    regex = re.compile(r'[^a-zA-Z\s]')
-    input_data = regex.sub('', input_data)
-    input_data = input_data.lower()
+    # regex = re.compile(r'[^a-zA-Z\s]')
+    # input_data = regex.sub('', input_data)
+    # input_data = input_data.lower()
 
     # sentence => array of words
-    arr = input_data.split(" ")
+    # arr = input_data.split(" ")
     # we_arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-    words_arr = []
+    # words_arr = []
     #
-    model = get_model()
+    # model = get_model()
     #
-    for word in arr:
-        doc = Dataset.nlp(word)
-        if doc and doc[0].is_stop:
-            continue
+    # for word in arr:
+    #     # doc = Dataset.nlp(word)
+    #     if doc and doc[0].is_stop:
+    #         continue
+    #
+    #     try:
+    #         word = doc[0].lemma_
+    #         word_vec = model[word]
+    #         words_arr.append(word_vec)
+    #         # for i in range(len(word_vec)):
+    #         #     # we_arr[i] += word_vec[i]
+    #         #     pass
+    #     except Exception:
+    #         print(word + " wasn't found on word embedding.")
 
-        try:
-            word = doc[0].lemma_
-            word_vec = model[word]
-            words_arr.append(word_vec)
-            # for i in range(len(word_vec)):
-            #     # we_arr[i] += word_vec[i]
-            #     pass
-        except Exception:
-            print(word + " wasn't found on word embedding.")
-
-    res = ml.run_model(words_arr)
+    res = ml.run_model(input_data)
     highest = [0, 0]
     new_res = []
     feelings = ["anger", "disgust", "fear", "joy", "sadness"]
@@ -194,7 +198,7 @@ def check_input(input_data, ml, expectedres, expectedfeeling):
 
     print("Results: " + str(res))
     print("Feeling: " + str(feelings[highest[1]]))
-    if feelings[highest[1]] == expectedfeeling:
+    if str(feelings[highest[1]]) == str(expectedfeeling):
         return_val = True
     # print("Wanted results: 0,0,0,0,1,0")
     # print("Wanted results: 0,0,0,0,1,0")
@@ -204,6 +208,7 @@ def check_input(input_data, ml, expectedres, expectedfeeling):
 
     print("Wanted results: ", expectedres)
     print("Wanted feeling: ", expectedfeeling)
+    print()
     return return_val
 def get_model():
     # use pre-trained model and use it
