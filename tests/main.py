@@ -55,6 +55,10 @@ nlp = spacy.load("en_core_web_sm")
 #             inner_vector2.append([num1+num2+num3+num4, num1*num2*num3*num4])
 #     return vector
 
+amount_true_feel = [0, 0, 0, 0, 0]
+amount_false_feel = [0, 0, 0, 0, 0]
+amount_false_feel_inv = [0, 0, 0, 0, 0]
+
 
 def accuracy(right, current):
     return 100 - np.abs(((right - current) / right) * 100)
@@ -83,8 +87,8 @@ def machine():
 
     choice = 2
     while choice == 2:
-        dataset_path = Dataset.save_dataset(ArchitectureType.LSTM, BATCHES, EXAMPLES, 'data.npy')
-        examples = np.load(dataset_path, allow_pickle=True)
+        # dataset_path, examples = Dataset.save_dataset(ArchitectureType.LSTM, BATCHES, EXAMPLES, 'data.npy')
+        examples = np.load('data.npy', allow_pickle=True)
 
         count = 0
 
@@ -96,10 +100,11 @@ def machine():
                 count) + "/" + str(len(examples)), end="")
         print("\rTraining 💪 was completed successfully!")
         amount_true = 0
+
         feelings = ["anger", "disgust", "fear", "joy", "sadness"]
         batchlen = 0
         for batch in examples:
-            batchlen = len(batch)
+            batchlen = len(batch) - math.floor(0.9 * EXAMPLES)
             for example in batch[math.floor(0.9 * EXAMPLES):]:
                 ls = []
                 up_index = 0
@@ -109,11 +114,21 @@ def machine():
                         if ls[i] > ls[i-1]:
                             up_index = i
 
-                if check_input(example[0], ml, str(ls), feelings[up_index]):
+                if check_input(example[0], ml, str(ls), feelings[up_index], up_index):
                     amount_true += 1
 
         # print(amount_true, EXAMPLES)
-        print("Percents of Success: "+ str((100*amount_true) / batchlen) + "%" )
+
+        for i in range(5):
+            print("Success for " + feelings[i] + ": " + str((100*amount_true_feel[i]) / (amount_true_feel[i] + amount_false_feel[i])) + "%")
+            try:
+                print("Inverse success for " + feelings[i] + ": " + str((100*amount_true_feel[i]) / (amount_true_feel[i] + amount_false_feel_inv[i])) + "%")
+            except Exception as e:
+                print("Inverse success for " + feelings[i] + ": Didn't ever guess ;)")
+            print()
+
+        print("General percents of success: " + str((100 * amount_true) / batchlen) + "%")
+        print()
 
 
 
@@ -151,7 +166,7 @@ def machine():
             print("i'm sorry... I'll learn more /:\n")
 
 
-def check_input(input_data, ml, expectedres, expectedfeeling):
+def check_input(input_data, ml, expectedres, expectedfeeling, expectedfeeling_num):
     return_val = False
     # print("\nInput: " + str(input_data))
     #
@@ -185,6 +200,7 @@ def check_input(input_data, ml, expectedres, expectedfeeling):
     highest = [0, 0]
     new_res = []
     feelings = ["anger", "disgust", "fear", "joy", "sadness"]
+
     for i in range(len(res)):
         if res[i] > highest[0]:
             highest[0] = res[i]
@@ -198,8 +214,14 @@ def check_input(input_data, ml, expectedres, expectedfeeling):
 
     print("Results: " + str(res))
     print("Feeling: " + str(feelings[highest[1]]))
+
     if str(feelings[highest[1]]) == str(expectedfeeling):
+        amount_true_feel[highest[1]] += 1
         return_val = True
+    else:
+        amount_false_feel_inv[highest[1]] += 1
+        amount_false_feel[expectedfeeling_num] += 1
+
     # print("Wanted results: 0,0,0,0,1,0")
     # print("Wanted results: 0,0,0,0,1,0")
 
@@ -210,6 +232,8 @@ def check_input(input_data, ml, expectedres, expectedfeeling):
     print("Wanted feeling: ", expectedfeeling)
     print()
     return return_val
+
+
 def get_model():
     # use pre-trained model and use it
     model = downloader.load('glove-twitter-25')

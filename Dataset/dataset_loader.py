@@ -134,9 +134,11 @@ class Dataset:
                     inner_vector.append(inner_vector2.copy())
 
                     Dataset.last_count += 1
-                random.shuffle(inner_vector)
-        except Exception:
-            pass
+        except Exception as e:
+            print(e)
+
+        for batch in vector:
+            random.shuffle(batch)
 
         print(anger, disgust, fear, joy, sadness)
         return vector
@@ -157,4 +159,4 @@ class Dataset:
 
         np.save(file_name, examples)
 
-        return file_name
+        return file_name, examples
