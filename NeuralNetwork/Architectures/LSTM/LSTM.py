@@ -20,13 +20,13 @@ HIDDEN_UNITS = 256
 
 class LSTM(Architecture):
     # Constructor
-    def __init__(self):
+    def __init__(self,list_of_feelings):
         super().__init__(ArchitectureType.LSTM)
 
         self.parameters = dict()
 
         self.input_units = 25
-        self.output_units = 5
+        self.output_units = len(list_of_feelings)
         self.hidden_units = HIDDEN_UNITS
 
         self.initialize_parameters()

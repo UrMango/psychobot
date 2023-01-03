@@ -15,21 +15,25 @@ class Dataset:
     nlp = spacy.load("en_core_web_sm")
 
     @staticmethod
-    def make_examples(architecture, num_of_batches, examples_per_batch):
+    def make_examples(architecture, num_of_batches, examples_per_batch, list_of_feelings):
         """
 		Makes examples by a specified number of batches and examples per batch
 		Number:param num_of_batches:
 		Number:param examples_per_batch:
+		List:param list_of_feelings: list of emotions names to learn
 		:return:
 		"""
         model = Dataset.get_model()
 
-        anger = 0
-        disgust = 0
-        fear = 0
-        joy = 0
-        sadness = 0
-        neutral = 0
+        emotions_count = []
+        for i in range(len(list_of_feelings)):
+            emotions_count.append(0)
+        # anger = 0
+        # disgust = 0
+        # fear = 0
+        # joy = 0
+        # sadness = 0
+        # neutral = 0
         vector = []
 
         try:
@@ -39,37 +43,36 @@ class Dataset:
                 inner_vector = vector[i]
                 for j in range(examples_per_batch):
                     inner_vector2 = []
-                    stop_grow = (Dataset.df.anger[Dataset.last_count] == 1 and anger-1 > (examples_per_batch*num_of_batches / 5)) or (Dataset.df.disgust[Dataset.last_count] == 1 and disgust-1 > (examples_per_batch*num_of_batches / 5)) or (Dataset.df.joy[Dataset.last_count] == 1 and joy-1 > (examples_per_batch*num_of_batches / 5)) or (Dataset.df.fear[Dataset.last_count] == 1 and fear-1 > (examples_per_batch*num_of_batches / 5)) or (Dataset.df.sadness[Dataset.last_count] == 1 and sadness-1 > (examples_per_batch*num_of_batches / 5))
 
-                    while (
-                            Dataset.df.example_very_unclear[Dataset.last_count] == 'TRUE'
-                            or (Dataset.df.anger[Dataset.last_count] == 0
-                                and Dataset.df.disgust[Dataset.last_count] == 0
-                                and Dataset.df.fear[Dataset.last_count] == 0
-                                and Dataset.df.joy[Dataset.last_count] == 0
-                                and Dataset.df.sadness[Dataset.last_count] == 0)) or stop_grow:
+                    stop_grow = False
 
+                    for k, emotion in enumerate(list_of_feelings):
+                        # Check if the value of the current emotion column at the last count index is 1
+                        # and if the current emotion count is greater than (examples_per_batch*num_of_batches / 5)
+                        if (getattr(Dataset.df, emotion)[Dataset.last_count] == 1 and emotions_count[k] - 1 > (
+                                examples_per_batch * num_of_batches / len(list_of_feelings))):
+                            stop_grow = True
+                            break
+
+                    while (Dataset.df.example_very_unclear[Dataset.last_count] == 'TRUE' or
+                           all(getattr(Dataset.df, emotion)[Dataset.last_count] == 0 for emotion in
+                               list_of_feelings)) or stop_grow:
                         Dataset.last_count += 1
-                        stop_grow = (Dataset.df.anger[Dataset.last_count] == 1 and anger-1 > (examples_per_batch*num_of_batches / 5)) or (Dataset.df.disgust[Dataset.last_count] == 1 and disgust-1 > (examples_per_batch*num_of_batches / 5)) or (Dataset.df.joy[Dataset.last_count] == 1 and joy-1 > (examples_per_batch*num_of_batches / 5)) or (Dataset.df.fear[Dataset.last_count] == 1 and fear-1 > (examples_per_batch*num_of_batches / 5)) or (Dataset.df.sadness[Dataset.last_count] == 1 and sadness-1 > (examples_per_batch*num_of_batches / 5))
+                        for k, emotion in enumerate(list_of_feelings):
+                            # Check if the value of the current emotion column at the last count index is 1
+                            # and if the current emotion count is greater than (examples_per_batch*num_of_batches / 5)
+                            if (getattr(Dataset.df, emotion)[Dataset.last_count] == 1 and emotions_count[k] - 1 > (
+                                    examples_per_batch * num_of_batches / len(list_of_feelings))):
+                                stop_grow = True
+                                break
 
                     # sentence
                     text = Dataset.df.text[Dataset.last_count]
-                    # print(Dataset.df.anger[Dataset.last_count])
-                    # print(Dataset.df.disgust[Dataset.last_count])
-                    # print(Dataset.df.fear[Dataset.last_count])
-                    # print(Dataset.df.joy[Dataset.last_count])
-                    # print(Dataset.df.sadness[Dataset.last_count])
 
-                    if Dataset.df.anger[Dataset.last_count] != 0:
-                        anger += 1
-                    if Dataset.df.disgust[Dataset.last_count] != 0:
-                        disgust += 1
-                    if Dataset.df.fear[Dataset.last_count] != 0:
-                        fear += 1
-                    if Dataset.df.joy[Dataset.last_count] != 0:
-                        joy += 1
-                    if Dataset.df.sadness[Dataset.last_count] != 0:
-                        sadness += 1
+                    for k, emotion in enumerate(list_of_feelings):
+                        if getattr(Dataset.df, emotion)[Dataset.last_count] != 0:
+                            emotions_count[k] += 1
+
                     # if Dataset.df.neutral[Dataset.last_count] != 0:
                     # neutral += 1
 
@@ -109,12 +112,8 @@ class Dataset:
                             we_arr[k] /= 25
 
                     # 28 (6) feelings vector res
-                    res.append(Dataset.df.anger[Dataset.last_count])
-                    res.append(Dataset.df.disgust[Dataset.last_count])
-                    res.append(Dataset.df.fear[Dataset.last_count])
-                    res.append(Dataset.df.joy[Dataset.last_count])
-                    res.append(Dataset.df.sadness[Dataset.last_count])
-                    # res.append(Dataset.df.neutral[Dataset.last_count])
+                    for k, emotion in enumerate(list_of_feelings):
+                        res.append(getattr(Dataset.df, emotion)[Dataset.last_count])
 
                     print('\r' + str(j) + "/" + str(examples_per_batch), end="")
 
@@ -139,8 +138,11 @@ class Dataset:
 
         for batch in vector:
             random.shuffle(batch)
+        amount_for_print = ""
+        for i in range(len(list_of_feelings)):
+            amount_for_print = amount_for_print + str(emotions_count[i])+", "
+        print(amount_for_print)
 
-        print(anger, disgust, fear, joy, sadness)
         return vector
 
     @staticmethod
@@ -154,8 +156,8 @@ class Dataset:
         return model
 
     @staticmethod
-    def save_dataset(arch_type, batches, examples, file_name):
-        examples = Dataset.make_examples(arch_type, batches, examples)
+    def save_dataset(arch_type, batches, examples, file_name, list_of_feelings):
+        examples = Dataset.make_examples(arch_type, batches, examples, list_of_feelings)
 
         np.save(file_name, examples)
 
