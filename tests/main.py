@@ -29,15 +29,16 @@ MIN_NUM = 0
 MAX_NUM = 0.25
 
 BATCHES = 1
-EXAMPLES = 2000
+EXAMPLES = 10
 
-XOR_EXAMPLES = [[[[0, 0]], [0]], [[[1, 0]], [1]], [[[0, 1]], [1]], [[[1, 1]], [0]]]
 
 nlp = spacy.load("en_core_web_sm")
 
-amount_true_feel = [0, 0, 0, 0, 0]
-amount_false_feel = [0, 0, 0, 0, 0]
-amount_false_feel_inv = [0, 0, 0, 0, 0]
+
+
+amount_true_feel = []
+amount_false_feel = []
+amount_false_feel_inv = []
 
 
 def accuracy(right, current):
@@ -64,10 +65,14 @@ def machine(answer, list_of_feelings):
                                                           list_of_feelings)
             with open('list.json', 'w') as f:
                 json.dump(list_of_feelings, f)
-        examples = np.load('data.npy', allow_pickle=True)
+        else:
+            examples = np.load('data.npy', allow_pickle=True)
 
         count = 0
-
+        for feel in list_of_feelings:
+            amount_true_feel.append(0)
+            amount_false_feel.append(0)
+            amount_false_feel_inv.append(0)
         print("Hello! 😀 I'm PsychoBot.\nMy thing is sentiment analysis.\n")
         for batch in examples:
             ml.train(batch, math.floor(0.9 * EXAMPLES))

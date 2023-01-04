@@ -10,7 +10,8 @@ from NeuralNetwork.Architectures.Architecture import ArchitectureType
 
 class Dataset:
     df = pd.read_csv(
-        r'E:\GitHub\hadera-801-psychobot\Dataset\go_emotions_dataset.csv')
+        #r'E:\GitHub\hadera-801-psychobot\Dataset\go_emotions_dataset.csv')
+        r'C:\Users\magshimim\Documents\Magshimim\Psychobot\hadera-801-psychobot\Dataset\go_emotions_dataset.csv')
     last_count = 0
     nlp = spacy.load("en_core_web_sm")
 
@@ -45,14 +46,6 @@ class Dataset:
                     inner_vector2 = []
 
                     stop_grow = False
-
-                    for k, emotion in enumerate(list_of_feelings):
-                        # Check if the value of the current emotion column at the last count index is 1
-                        # and if the current emotion count is greater than (examples_per_batch*num_of_batches / 5)
-                        if (getattr(Dataset.df, emotion)[Dataset.last_count] == 1 and emotions_count[k] - 1 > (
-                                examples_per_batch * num_of_batches / len(list_of_feelings))):
-                            stop_grow = True
-                            break
 
                     while (Dataset.df.example_very_unclear[Dataset.last_count] == 'TRUE' or
                            all(getattr(Dataset.df, emotion)[Dataset.last_count] == 0 for emotion in
