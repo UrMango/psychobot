@@ -29,7 +29,7 @@ MIN_NUM = 0
 MAX_NUM = 0.25
 
 BATCHES = 1
-EXAMPLES = 10
+EXAMPLES = 3000
 
 
 nlp = spacy.load("en_core_web_sm")
@@ -97,7 +97,7 @@ def machine(answer, list_of_feelings):
                         if ls[i] > ls[i - 1]:
                             up_index = i
 
-                if check_input(example[0], ml, str(ls), list_of_feelings[up_index], up_index):
+                if check_input(example[0], ml, str(ls), list_of_feelings[up_index], up_index, list_of_feelings):
                     amount_true += 1
 
         # print(amount_true, EXAMPLES)
@@ -227,11 +227,11 @@ def main():
                 choice = input()
                 print("")
                 if choice.lower() == "y":
-                    with open('list_of_feelings.json', 'r') as f:
+                    with open('list.json', 'r') as f:
                         list_of_feelings = json.load(f)
                     ml = machine(False, list_of_feelings)
             else:
-                with open('list_of_feelings.json', 'r') as f:
+                with open('list.json', 'r') as f:
                     list_of_feelings = json.load(f)
                 ml = machine(False, list_of_feelings)
         elif choice == 2:

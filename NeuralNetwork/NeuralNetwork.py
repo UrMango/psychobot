@@ -14,6 +14,9 @@ class NeuralNetwork:
     def run_model(self, input_data):
         return self.architecture.run_model(input_data)
 
+    def run_model_with_embedding(self, input_string):
+        return self.architecture.run_model_with_embedding(input_string)
+
     def train(self, examples, iters):
         self.architecture.train(examples, iters)
 

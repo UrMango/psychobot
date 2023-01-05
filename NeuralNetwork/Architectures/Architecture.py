@@ -15,4 +15,7 @@ class Architecture:
         raise NotImplementedError
 
     def run_model(self, input_data):
-        raise NotImplementedError
+        raise
+
+    def run_model_with_embedding(self, input_string):
+        raise

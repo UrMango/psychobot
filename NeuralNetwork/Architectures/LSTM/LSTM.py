@@ -3,6 +3,12 @@ from NeuralNetwork.Architectures import Architecture
 from NeuralNetwork.Utillities.activation_functions import Sigmoid, Tanh
 from NeuralNetwork.Architectures.LSTM.OutputCell import OutputCell
 from NeuralNetwork.Architectures.LSTM.Cell import Cell
+import pandas as pd
+from gensim import models, similarities, downloader
+import logging
+import re
+import random
+import spacy
 
 ArchitectureType = Architecture.ArchitectureType
 Architecture = Architecture.Architecture
@@ -20,16 +26,22 @@ HIDDEN_UNITS = 256
 
 class LSTM(Architecture):
     # Constructor
-    def __init__(self,list_of_feelings):
+    def __init__(self, list_of_feelings):
         super().__init__(ArchitectureType.LSTM)
 
         self.parameters = dict()
 
         self.input_units = 25
         self.output_units = len(list_of_feelings)
+        self.list_of_feelings = list_of_feelings
         self.hidden_units = HIDDEN_UNITS
 
         self.initialize_parameters()
+
+        logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
+
+        self.nlp = spacy.load("en_core_web_sm")
+        self.model = downloader.load('glove-twitter-25')
 
     def initialize_parameters(self):
         mean = 0
@@ -264,6 +276,47 @@ class LSTM(Architecture):
         lstm_cache, activation_cache, cell_cache, output_cache = self.forward_propagation(input_data)
 
         return output_cache['o']
+
+    def run_model_with_embedding(self, input_string):
+        regex = re.compile(r'[^a-zA-Z\s]')
+        text = regex.sub('', input_string)
+        text = text.lower()
+
+        # sentence => array of words
+        arr = text.split(" ")
+
+        we_arr = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        words_arr = []
+
+        # words => word embedding
+        for word in arr:
+            doc = self.nlp(word)
+            if doc and doc[0].is_stop:
+                continue
+            try:
+                # print("Before:", word)
+                word = doc[0].lemma_
+                # print("After:", word)
+                word_vec = self.model[word]
+                words_arr.append(word_vec)
+            except Exception:
+                pass
+            # print(word + " wasn't found on word embedding.")
+        input_data = words_arr
+
+        res = self.run_model(input_data)
+        highest = [0, 0]
+
+
+        for i in range(len(res)):
+            if res[i] > highest[0]:
+                highest[0] = res[i]
+                highest[1] = i
+        dict = {}
+        for i in range(len(self.list_of_feelings)):
+            emotion = self.list_of_feelings[i]
+            dict[emotion] = res[i]
+        return (self.list_of_feelings[highest[1]],dict)
 
     # train function
     def train(self, train_dataset, iters=1000):

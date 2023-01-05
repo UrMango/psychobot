@@ -1,5 +1,11 @@
+import json
+
+import numpy as np
 from flask import Flask, request, send_from_directory
 from flask_cors import CORS
+
+from NeuralNetwork.Architectures.LSTM.LSTM import LSTM
+from NeuralNetwork.NeuralNetwork import NeuralNetwork
 
 app = Flask(__name__)
 CORS(app)
@@ -18,17 +24,14 @@ def send_validation(path):
 @app.route('/sentiment')
 def sentiment():
     sentence = request.args.get('sentence', '')
+
+    emotion, feelings = ml.run_model_with_embedding(sentence)
+
     return {
         'res': {
             'sentence': sentence,
-            'feeling': 'natural',
-            'reliability': {
-                'anger': 0.0,
-                'disgust': 0.0,
-                'fear': 0.0,
-                'joy': 0.0,
-                'sadness': 0.0,
-            }
+            'feeling': emotion,
+            'reliability': feelings
         }
     }
 
@@ -70,5 +73,23 @@ def update():
 
 
 if __name__ == '__main__':
+    global ml
+    # initialize ML
+
+    list_of_feelings = []
+    with open('list.json', 'r') as f:
+        list_of_feelings = json.load(f)
+
+    ml = NeuralNetwork(LSTM(list_of_feelings))
+    examples = np.load('data.npy', allow_pickle=True)
+
+    count = 0
+    for batch in examples:
+        ml.train(batch, len(batch))
+        count += 1
+        print('\r' + "Training 💪 - " + "{:.2f}".format(100 * (count / len(examples))) + "% | batch: " + str(
+            count) + "/" + str(len(examples)), end="")
+    print("\rTraining 💪 was completed successfully!")
+
     app.run(host='0.0.0.0', port=8080)
     # serve(app, host='0.0.0.0', port=80, ssl_context=('cert.crt', 'cert.key'))
