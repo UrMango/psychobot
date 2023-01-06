@@ -9,12 +9,12 @@ from NeuralNetwork.Architectures.Architecture import ArchitectureType
 
 
 class Dataset:
-    df = pd.read_csv(
-        r'E:\GitHub\hadera-801-psychobot\Dataset\go_emotions_dataset.csv')
-        # r'C:\Users\magshimim\Documents\Magshimim\Psychobot\hadera-801-psychobot\Dataset\go_emotions_dataset.csv')
-
-    last_count = 0
-    nlp = spacy.load("en_core_web_sm")
+    # df = pd.read_csv(
+    #     r'E:\GitHub\hadera-801-psychobot\Dataset\go_emotions_dataset.csv')
+    #     # r'C:\Users\magshimim\Documents\Magshimim\Psychobot\hadera-801-psychobot\Dataset\go_emotions_dataset.csv')
+    #
+    # last_count = 0
+    # nlp = spacy.load("en_core_web_sm")
 
     @staticmethod
     def make_examples(architecture, num_of_batches, examples_per_batch, list_of_feelings):
@@ -158,6 +158,78 @@ class Dataset:
         return vector
 
     @staticmethod
+    def shuffle_dataset(data_location, data_name):
+        df = pd.read_csv(data_location + '\\' + data_name, header=0)  # r'E:\GitHub\hadera-801-psychobot\Dataset\
+        shuffled_df = df.sample(frac=1)
+        shuffled_df.to_csv('final_dataset.csv', index=False)
+
+    @staticmethod
+    def merge_dataset(data_location, data_name):
+        new_df = pd.read_csv(data_location + '\\' + data_name) # r'E:\GitHub\hadera-801-psychobot\Dataset\
+
+        dict_feelings = {"id": [], "text": [], "example_very_unclear": [], "admiration": [], "amusement": [],
+                         "anger": [], "annoyance": [], "approval": [], "caring": [], "confusion": [], "curiosity": [],
+                         "desire": [], "disappointment": [], "disapproval": [], "disgust": [], "embarrassment": [],
+                         "enthusiasm": [], "fear": [], "gratitude": [], "grief": [], "happy": [], "love": [],
+                         "worry": [], "optimism": [], "pride": [], "realization": [], "relief": [], "remorse": [],
+                         "sadness": [], "neutral": []}
+
+        # feelings
+
+        # admiration
+        # amusement
+        # anger
+        # annoyance
+        # approval
+        # caring
+        # confusion
+        # curiosity
+        # desire
+        # disappointment
+        # disapproval
+        # disgust
+        # embarrassment
+        # excitement - enthusiasm
+        # fear
+        # gratitude
+        # grief
+        # joy - happiness - fun - happy
+        # love
+        # nervousness - worry
+        # optimism
+        # pride
+        # realization
+        # relief
+        # remorse
+        # sadness
+        # surprise
+        # neutral neutral
+
+        for i in range(len(new_df.Text)):
+            # if new_df.sentiment[i] in ["empty", "boredom", "hate"]:
+            #     continue
+            dict_feelings["id"].append("e2718281-mango-god")
+            dict_feelings["example_very_unclear"].append("FALSE")
+            dict_feelings["text"].append(new_df.Text[i])
+
+            print('\r' + "Merging 💪 - " + "{:.2f}".format(100 * (i / len(new_df.Text))) + "% | numeric: " + str(
+                i) + "/" + str(len(new_df.Text)), end="")
+            for emotion in dict_feelings.keys():
+                if emotion not in ["id", "example_very_unclear", "text"]:
+                    if new_df.Emotion[i] == emotion:
+                        dict_feelings[emotion].append(1)
+                    else:
+                        dict_feelings[emotion].append(0)
+
+            # if new_df.sentiment[i] == "fun":
+            #     dict_feelings["happiness"][-1] = 1
+
+        df_to_append = pd.DataFrame(dict_feelings)
+
+        df_to_append.to_csv(data_location + r'\go_emotions_dataset-remade-remade.csv', mode='a', index=False, header=False)
+        print('\r' + "Merging 💪 Completed successfully")
+
+    @staticmethod
     def get_model():
 
         logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
@@ -174,3 +246,7 @@ class Dataset:
         np.save(file_name, examples)
 
         return file_name, examples
+
+
+if __name__ == '__main__':
+    Dataset.shuffle_dataset(r'E:\GitHub\hadera-801-psychobot\Dataset', 'go_emotions_dataset-remade-remade.csv')
