@@ -84,6 +84,34 @@ def machine(answer, list_of_feelings):
 
         # ["anger", "disgust", "fear", "joy", "sadness"]
         # anger, disgust, fear, joy, sadness
+        # admiration
+        # amusement
+        # anger
+        # annoyance
+        # approval
+        # caring
+        # confusion
+        # curiosity
+        # desire
+        # disappointment
+        # disapproval
+        # disgust
+        # embarrassment
+        # enthusiasm
+        # fear
+        # gratitude
+        # grief
+        # happy
+        # love
+        # worry
+        # optimism
+        # pride
+        # realization
+        # relief
+        # remorse
+        # sadness
+        # surprise
+        # neutral
 
         batchlen = 0
         for batch in examples:

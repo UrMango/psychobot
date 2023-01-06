@@ -9,12 +9,12 @@ from NeuralNetwork.Architectures.Architecture import ArchitectureType
 
 
 class Dataset:
-    # df = pd.read_csv(
-    #     r'E:\GitHub\hadera-801-psychobot\Dataset\go_emotions_dataset.csv')
-    #     # r'C:\Users\magshimim\Documents\Magshimim\Psychobot\hadera-801-psychobot\Dataset\go_emotions_dataset.csv')
-    #
-    # last_count = 0
-    # nlp = spacy.load("en_core_web_sm")
+    df = pd.read_csv(
+        r'E:\GitHub\hadera-801-psychobot\Dataset\final_dataset.csv')
+        # r'C:\Users\magshimim\Documents\Magshimim\Psychobot\hadera-801-psychobot\Dataset\go_emotions_dataset.csv')
+
+    last_count = 0
+    nlp = spacy.load("en_core_web_sm")
 
     @staticmethod
     def make_examples(architecture, num_of_batches, examples_per_batch, list_of_feelings):
