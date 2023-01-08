@@ -29,7 +29,7 @@ MIN_NUM = 0
 MAX_NUM = 0.25
 
 BATCHES = 1
-EXAMPLES = 3000
+EXAMPLES = 5000
 
 
 nlp = spacy.load("en_core_web_sm")
@@ -61,7 +61,8 @@ def machine(answer, list_of_feelings):
 
     while True:
         if answer:
-            dataset_path, examples = Dataset.save_dataset(ArchitectureType.LSTM, BATCHES, EXAMPLES, 'data.npy',
+            dataset_path, examples = Dataset.save_dataset(ArchitectureType.LSTM, BATCHES, EXAMPLES,
+                                                          'data.npy',
                                                           list_of_feelings)
             with open('list.json', 'w') as f:
                 json.dump(list_of_feelings, f)
@@ -84,6 +85,7 @@ def machine(answer, list_of_feelings):
 
         # ["anger", "disgust", "fear", "joy", "sadness"]
         # anger, disgust, fear, joy, sadness
+        # happy, anger, sadness
         # admiration
         # amusement
         # anger
