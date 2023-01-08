@@ -6,12 +6,15 @@ import re
 import random
 import spacy
 from NeuralNetwork.Architectures.Architecture import ArchitectureType
+#EXACT_PATH = r'E:\GitHub\hadera-801-psychobot\Dataset\final_dataset.csv'
+EXACT_PATH = r'hadera-801-psychobot\Dataset\final_dataset.csv'
+
 
 
 class Dataset:
-    df = pd.read_csv(
-        r'E:\GitHub\hadera-801-psychobot\Dataset\final_dataset.csv')
-        # r'C:\Users\magshimim\Documents\Magshimim\Psychobot\hadera-801-psychobot\Dataset\go_emotions_dataset.csv')
+    path = r'C:\Users\magshimim\Documents\Magshimim\Psychobot'
+
+    df = pd.read_csv( path + "\\" +EXACT_PATH)
 
     last_count = 0
     nlp = spacy.load("en_core_web_sm")
