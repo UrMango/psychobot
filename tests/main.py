@@ -31,9 +31,7 @@ MAX_NUM = 0.25
 BATCHES = 1
 EXAMPLES = 5000
 
-
 nlp = spacy.load("en_core_web_sm")
-
 
 
 amount_true_feel = []
@@ -56,8 +54,40 @@ class NpEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-def machine(answer, list_of_feelings):
-    ml = NeuralNetwork(LSTM(list_of_feelings))
+def machine_with_params(list_of_feelings):
+    learning_rates = [0.05, 0.01, 0.005, 0.002, 0.001, 0.0008, 0.009]
+    hidden_units = [4096, 2048, 1024, 512, 256, 128, 64, 32, 16]
+    std_units = [0.2, 0.1, 0.05, 0.01, 0.05, 0.001, 0.005]
+
+    rates = []
+    units = []
+    stds = []
+
+    for rate in learning_rates:
+        rates.append({"rate": rate, "precents": machine(False, list_of_feelings, learning_rate=rate)})
+        print('\n↑↑↑ LEARNING RATE: ' + str(rate) + ' ↑↑↑')
+
+    for unit in hidden_units:
+        units.append({"unit": unit, "precents": machine(False, list_of_feelings, hidden_units=unit)})
+        print('\n↑↑↑ HIDDEN_UNITS: ' + str(unit) + ' ↑↑↑')
+
+    for std in std_units:
+        stds.append({"std": std, "precents": machine(False, list_of_feelings, std=std)})
+        print('\n↑↑↑ STD: ' + str(std) + ' ↑↑↑')
+
+    print("\nTOTAL RATE PRECENTS:")
+    for rate in rates:
+        print("rate: " + str(rate["rate"]) + " - " + str(rate["precents"]) + "%")
+    print("\nTOTAL HIDDEN UNITS PRECENTS:")
+    for unit in hidden_units:
+        print("unit: " + str(unit["unit"]) + " - " + str(unit["precents"]) + "%")
+    print("\nTOTAL STD PERCENTS")
+    for std in std_units:
+        print("std: " + str(std["std"]) + " - " + str(std["precents"]) + "%")
+
+
+def machine(answer, list_of_feelings, hidden_units=256, learning_rate=0.001, std=0.01):
+    ml = NeuralNetwork(LSTM(list_of_feelings, hidden_units, learning_rate, std))
 
     while True:
         if answer:
@@ -67,7 +97,7 @@ def machine(answer, list_of_feelings):
             with open('list.json', 'w') as f:
                 json.dump(list_of_feelings, f)
         else:
-            examples = np.load('data.npy', allow_pickle=True)
+            examples = np.load('./all-datasets/5k-happy-sadness-anger/data.npy', allow_pickle=True)
 
         count = 0
         for feel in list_of_feelings:
@@ -132,40 +162,41 @@ def machine(answer, list_of_feelings):
 
         # print(amount_true, EXAMPLES)
 
-        for i in range(len(list_of_feelings)):
-            try:
-                print("Success for " + list_of_feelings[i] + ": " + str(
-                    (100 * amount_true_feel[i]) / (amount_true_feel[i] + amount_false_feel[i])) + "%")
-            except Exception as e:
-                print("Success for " + list_of_feelings[i] + ": There was no such feeling")
-
-            try:
-                print("Inverse success for " + list_of_feelings[i] + ": " + str(
-                    (100 * amount_true_feel[i]) / (amount_true_feel[i] + amount_false_feel_inv[i])) + "%")
-            except Exception as e:
-                print("Inverse success for " + list_of_feelings[i] + ": Didn't even guess ;)")
-            print()
+        # for i in range(len(list_of_feelings)):
+        #     try:
+        #         print("Success for " + list_of_feelings[i] + ": " + str(
+        #             (100 * amount_true_feel[i]) / (amount_true_feel[i] + amount_false_feel[i])) + "%")
+        #     except Exception as e:
+        #         print("Success for " + list_of_feelings[i] + ": There was no such feeling")
+        #
+        #     try:
+        #         print("Inverse success for " + list_of_feelings[i] + ": " + str(
+        #             (100 * amount_true_feel[i]) / (amount_true_feel[i] + amount_false_feel_inv[i])) + "%")
+        #     except Exception as e:
+        #         print("Inverse success for " + list_of_feelings[i] + ": Didn't even guess ;)")
+        #     print()
 
         print("General percents of success: " + str((100 * amount_true) / batchlen) + "%")
         print()
+        return (100 * amount_true) / batchlen
 
-        print(
-            "Are the results fulfilling your satisfaction?\n1 - Yes. The student became the master\n2 - No. Learn more!")
-        choice = int(input())
-        if choice == 1:
-            print("HURRAY!\nA NEW MASTER HAS ARRIVED...")
-            print("""
-       ___                _                              _            
-      / _ \\___ _   _  ___| |__   ___     /\\/\\   __ _ ___| |_ ___ _ __ 
-     / /_)/ __| | | |/ __| '_ \\ / _ \\   /    \\ / _` / __| __/ _ \\ '__|
-    / ___/\\__ \\ |_| | (__| | | | (_) | / /\\/\\ \\ (_| \\__ \\ ||  __/ |   
-    \\/    |___/\__, |\\___|_| |_|\\___/  \\/    \\/\\__,_|___/\\__\\___|_|   
-               |___/                                                  
-                """)
-            time.sleep(2)
-            return ml
-        if choice == 2:
-            print("i'm sorry... I'll learn more /:\n")
+    #     print(
+    #         "Are the results fulfilling your satisfaction?\n1 - Yes. The student became the master\n2 - No. Learn more!")
+    #     choice = int(input())
+    #     if choice == 1:
+    #         print("HURRAY!\nA NEW MASTER HAS ARRIVED...")
+    #         print("""
+    #    ___                _                              _
+    #   / _ \\___ _   _  ___| |__   ___     /\\/\\   __ _ ___| |_ ___ _ __
+    #  / /_)/ __| | | |/ __| '_ \\ / _ \\   /    \\ / _` / __| __/ _ \\ '__|
+    # / ___/\\__ \\ |_| | (__| | | | (_) | / /\\/\\ \\ (_| \\__ \\ ||  __/ |
+    # \\/    |___/\__, |\\___|_| |_|\\___/  \\/    \\/\\__,_|___/\\__\\___|_|
+    #            |___/
+    #             """)
+    #         time.sleep(2)
+    #         return ml
+    #     if choice == 2:
+    #         print("i'm sorry... I'll learn more /:\n")
 
 
 def check_input(input_data, ml, expectedres, expectedfeeling, expectedfeeling_num, list_of_feelings):
@@ -213,8 +244,8 @@ def check_input(input_data, ml, expectedres, expectedfeeling, expectedfeeling_nu
     #     else:
     #         new_res.append(0)
 
-    print("Results: " + str(res))
-    print("Feeling: " + str(list_of_feelings[highest[1]]))
+    # print("Results: " + str(res))
+    # print("Feeling: " + str(list_of_feelings[highest[1]]))
 
     if str(list_of_feelings[highest[1]]) == str(expectedfeeling):
         amount_true_feel[highest[1]] += 1
@@ -229,9 +260,9 @@ def check_input(input_data, ml, expectedres, expectedfeeling, expectedfeeling_nu
     # print("Wanted results: 1,0,0,0,0,0")
     # print("Wanted feeling: anger")
 
-    print("Wanted results: ", expectedres)
-    print("Wanted feeling: ", expectedfeeling)
-    print()
+    # print("Wanted results: ", expectedres)
+    # print("Wanted feeling: ", expectedfeeling)
+    # print()
     return return_val
 
 
@@ -274,6 +305,13 @@ def main():
             print("This is not possible yet")
         elif choice == 4:
             print("Bye bye 👋")
+        elif choice == 5:
+            print("You enter the secret option")
+            with open('list.json', 'r') as f:
+                list_of_feelings = json.load(f)
+            ml = machine_with_params(list_of_feelings)
+
+
 
 
 if __name__ == '__main__':

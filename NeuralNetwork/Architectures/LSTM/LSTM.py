@@ -13,39 +13,37 @@ import spacy
 ArchitectureType = Architecture.ArchitectureType
 Architecture = Architecture.Architecture
 
-# learning rate
-learning_rate = 0.001
+INPUT_UNITS = 25
 
 # beta1 for V parameters used in Adam Optimizer
 beta1 = 0.90
 
 # beta2 for S parameters used in Adam Optimizer
 beta2 = 0.99
-HIDDEN_UNITS = 256
 
 
 class LSTM(Architecture):
     # Constructor
-    def __init__(self, list_of_feelings):
+    def __init__(self, list_of_feelings, hidden_units=256, learning_rate=0.001, std=0.01, embed=False):
         super().__init__(ArchitectureType.LSTM)
 
         self.parameters = dict()
-
-        self.input_units = 25
+        self.input_units = INPUT_UNITS
         self.output_units = len(list_of_feelings)
         self.list_of_feelings = list_of_feelings
-        self.hidden_units = HIDDEN_UNITS
+        self.hidden_units = hidden_units
+        self.learning_rate = learning_rate
 
-        self.initialize_parameters()
+        self.initialize_parameters(std)
 
         logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
-        self.nlp = spacy.load("en_core_web_sm")
-        self.model = downloader.load('glove-twitter-25')
+        if embed:
+            self.nlp = spacy.load("en_core_web_sm")
+            self.model = downloader.load('glove-twitter-25')
 
-    def initialize_parameters(self):
+    def initialize_parameters(self, std):
         mean = 0
-        std = 0.01
 
         # gates
         forget_gate_weights = np.random.normal(mean, std, (self.input_units + self.hidden_units, self.hidden_units))
@@ -76,8 +74,8 @@ class LSTM(Architecture):
         embedding_cache = dict()
 
         # initial activation_matrix(a0) and cell_matrix(c0)
-        a0 = np.zeros([HIDDEN_UNITS], dtype=np.float32)
-        c0 = np.zeros([HIDDEN_UNITS], dtype=np.float32)
+        a0 = np.zeros([self.hidden_units], dtype=np.float32)
+        c0 = np.zeros([self.hidden_units], dtype=np.float32)
 
         # store the initial activations in cache
         activation_cache['a0'] = a0
@@ -213,11 +211,11 @@ class LSTM(Architecture):
         show = (beta2 * show + (1 - beta2) * (dhow ** 2))
 
         # update the parameters
-        fgw = fgw - learning_rate * ((vfgw) / (np.sqrt(sfgw) + 1e-6))
-        igw = igw - learning_rate * ((vigw) / (np.sqrt(sigw) + 1e-6))
-        ogw = ogw - learning_rate * ((vogw) / (np.sqrt(sogw) + 1e-6))
-        ggw = ggw - learning_rate * ((vggw) / (np.sqrt(sggw) + 1e-6))
-        how = how - learning_rate * ((vhow) / (np.sqrt(show) + 1e-6))
+        fgw = fgw - self.learning_rate * ((vfgw) / (np.sqrt(sfgw) + 1e-6))
+        igw = igw - self.learning_rate * ((vigw) / (np.sqrt(sigw) + 1e-6))
+        ogw = ogw - self.learning_rate * ((vogw) / (np.sqrt(sogw) + 1e-6))
+        ggw = ggw - self.learning_rate * ((vggw) / (np.sqrt(sggw) + 1e-6))
+        how = how - self.learning_rate * ((vhow) / (np.sqrt(show) + 1e-6))
 
         # store the new weights
         self.parameters['fgw'] = fgw

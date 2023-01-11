@@ -6,15 +6,15 @@ import re
 import random
 import spacy
 from NeuralNetwork.Architectures.Architecture import ArchitectureType
-#EXACT_PATH = r'E:\GitHub\hadera-801-psychobot\Dataset\final_dataset.csv'
+
 EXACT_PATH = r'hadera-801-psychobot\Dataset\final_dataset.csv'
 
 
-
 class Dataset:
-    path = r'C:\Users\magshimim\Documents\Magshimim\Psychobot'
+    path = r'E:\GitHub'
+    # path = r'C:\Users\magshimim\Documents\Magshimim\Psychobot'
 
-    df = pd.read_csv( path + "\\" +EXACT_PATH)
+    df = pd.read_csv(path + "\\" + EXACT_PATH)
 
     last_count = 0
     nlp = spacy.load("en_core_web_sm")
@@ -61,7 +61,7 @@ class Dataset:
 
                     while (Dataset.df.example_very_unclear[Dataset.last_count] == 'TRUE' or
                            all(getattr(Dataset.df, emotion)[Dataset.last_count] == 0 for emotion in
-                               list_of_feelings)) or stop_grow:
+                               list_of_feelings)) or stop_grow or (Dataset.df.id[Dataset.last_count] != "e2718281-mango-god" and Dataset.df.id[Dataset.last_count] != "pi31415-42-69"):
                         Dataset.last_count += 1
                         stop_grow = False
                         for k, emotion2 in enumerate(list_of_feelings):
