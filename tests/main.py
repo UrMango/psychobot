@@ -56,7 +56,7 @@ class NpEncoder(json.JSONEncoder):
 
 def machine_with_params(list_of_feelings):
     learning_rates = [0.05, 0.01, 0.005, 0.002, 0.001, 0.0008, 0.009]
-    hidden_units = [4096, 2048, 1024, 512, 256, 128, 64, 32, 16]
+    hidden_units = [512, 256, 128, 64, 32, 16]
     std_units = [0.2, 0.1, 0.05, 0.01, 0.05, 0.001, 0.005]
 
     rates = []
@@ -64,22 +64,22 @@ def machine_with_params(list_of_feelings):
     stds = []
 
     for rate in learning_rates:
+        print('\n↓↓↓  LEARNING RATE: ' + str(rate) + ' ↓↓↓')
         rates.append({"rate": rate, "precents": machine(False, list_of_feelings, learning_rate=rate)})
-        print('\n↑↑↑ LEARNING RATE: ' + str(rate) + ' ↑↑↑')
 
     for unit in hidden_units:
+        print('\n↓↓↓ HIDDEN_UNITS: ' + str(unit) + ' ↓↓↓')
         units.append({"unit": unit, "precents": machine(False, list_of_feelings, hidden_units=unit)})
-        print('\n↑↑↑ HIDDEN_UNITS: ' + str(unit) + ' ↑↑↑')
 
     for std in std_units:
+        print('\n↓↓↓ STD: ' + str(std) + ' ↓↓↓')
         stds.append({"std": std, "precents": machine(False, list_of_feelings, std=std)})
-        print('\n↑↑↑ STD: ' + str(std) + ' ↑↑↑')
 
     print("\nTOTAL RATE PRECENTS:")
     for rate in rates:
         print("rate: " + str(rate["rate"]) + " - " + str(rate["precents"]) + "%")
     print("\nTOTAL HIDDEN UNITS PRECENTS:")
-    for unit in hidden_units:
+    for unit in units:
         print("unit: " + str(unit["unit"]) + " - " + str(unit["precents"]) + "%")
     print("\nTOTAL STD PERCENTS")
     for std in std_units:
@@ -294,7 +294,7 @@ def main():
             else:
                 with open('list.json', 'r') as f:
                     list_of_feelings = json.load(f)
-                ml = machine(False, list_of_feelings)
+                ml = machine(False, list_of_feelings, learning_rate=0.0008, std=0.05)
         elif choice == 2:
             print("Enter the list of feelings:")
             list_of_feelings = input()
