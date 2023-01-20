@@ -1,50 +1,15 @@
 import numpy as np
 
-from NeuralNetwork.Utillities.activation_functions import Sigmoid, Tanh
-
+from NeuralNetwork.Utillities.activation_functions import Sigmoid, Tanh, Softmax
 
 class Cell:
 	@staticmethod
-	def activate(batch, prev_activation_mat, prev_cell_mat, params):
-		# get parameters
-		fgw = params['fgw']
-		igw = params['igw']
-		ogw = params['ogw']
-		ggw = params['ggw']
+	def activate(word, previous_hidden, parameters):
+		hidden = np.add(np.add(np.matmul(parameters['wx'], word), np.matmul(parameters['wh'], previous_hidden)), parameters)
 
-		# concat batch data and prev_activation matrix
-		concat_dataset = np.concatenate((batch, prev_activation_mat), axis=0)
-
-		# forget gate activations
-		fa = np.matmul(concat_dataset, fgw)
-		fa = Sigmoid.sigmoid(fa)
-
-		# input gate activations
-		ia = np.matmul(concat_dataset, igw)
-		ia = Sigmoid.sigmoid(ia)
-
-		# output gate activations
-		oa = np.matmul(concat_dataset, ogw)
-		oa = Sigmoid.sigmoid(oa)
-
-		# gate gate activations
-		ga = np.matmul(concat_dataset, ggw)
-		ga = Tanh.tanh(ga)
-
-		# new cell memory matrix
-		cell_memory_matrix = np.multiply(fa, prev_cell_mat) + np.multiply(ia, ga)
-
-		# current activation matrix
-		activation_vector = np.multiply(oa, Tanh.tanh(cell_memory_matrix))
-
-		# lets store the activations to be used in back prop
-		lstm_activations = dict()
-		lstm_activations['fa'] = fa
-		lstm_activations['ia'] = ia
-		lstm_activations['oa'] = oa
-		lstm_activations['ga'] = ga
-
-		return lstm_activations, cell_memory_matrix, activation_vector
+		# we're doing hidden equals to tanh of the hidden
+		hidden = Tanh.tanh(hidden)
+		return hidden
 
 	@staticmethod
 	def calculate_error(activation_output_error, next_activation_error, next_cell_error, parameters,

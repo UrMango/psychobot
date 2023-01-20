@@ -4,7 +4,7 @@ from enum import Enum
 class ArchitectureType(Enum):
     BASIC = 0
     LSTM = 1
-    RNN = 2
+    GRU = 2
     CNN = 3
 
 class Architecture:

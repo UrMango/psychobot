@@ -23,13 +23,13 @@ from gensim import downloader
 
 import re
 
-EPOCHES = 1000
+EPOCHES = 20
 
 MIN_NUM = 0
 MAX_NUM = 0.25
 
 BATCHES = 1
-EXAMPLES = 5000
+EXAMPLES = 30000
 
 nlp = spacy.load("en_core_web_sm")
 
@@ -55,8 +55,8 @@ class NpEncoder(json.JSONEncoder):
 
 
 def machine_with_params(list_of_feelings):
-    learning_rates = [0.05, 0.01, 0.005, 0.002, 0.001, 0.0008, 0.009]
-    hidden_units = [512, 256, 128, 64, 32, 16]
+    learning_rates = [ 0.001, 0.0008, 0.0005,0.0001,0.00005]
+    hidden_units = [512,400, 300, 256, 128]
     std_units = [0.2, 0.1, 0.05, 0.01, 0.05, 0.001, 0.005]
 
     rates = []
@@ -71,9 +71,9 @@ def machine_with_params(list_of_feelings):
         print('\n↓↓↓ HIDDEN_UNITS: ' + str(unit) + ' ↓↓↓')
         units.append({"unit": unit, "precents": machine(False, list_of_feelings, hidden_units=unit)})
 
-    for std in std_units:
-        print('\n↓↓↓ STD: ' + str(std) + ' ↓↓↓')
-        stds.append({"std": std, "precents": machine(False, list_of_feelings, std=std)})
+    #for std in std_units:
+    #    print('\n↓↓↓ STD: ' + str(std) + ' ↓↓↓')
+    #    stds.append({"std": std, "precents": machine(False, list_of_feelings, std=std)})
 
     print("\nTOTAL RATE PRECENTS:")
     for rate in rates:
@@ -86,7 +86,7 @@ def machine_with_params(list_of_feelings):
         print("std: " + str(std["std"]) + " - " + str(std["precents"]) + "%")
 
 
-def machine(answer, list_of_feelings, hidden_units=256, learning_rate=0.001, std=0.01):
+def machine(answer, list_of_feelings, hidden_units=256, learning_rate=0.0008, std=0.05):
     ml = NeuralNetwork(LSTM(list_of_feelings, hidden_units, learning_rate, std))
 
     while True:
@@ -97,87 +97,93 @@ def machine(answer, list_of_feelings, hidden_units=256, learning_rate=0.001, std
             with open('list.json', 'w') as f:
                 json.dump(list_of_feelings, f)
         else:
-            examples = np.load('./all-datasets/5k-happy-sadness-anger/data.npy', allow_pickle=True)
+            examples = np.load('./all-datasets/30k-happy-sadness-anger/data.npy', allow_pickle=True)
 
         count = 0
         for feel in list_of_feelings:
             amount_true_feel.append(0)
             amount_false_feel.append(0)
             amount_false_feel_inv.append(0)
-        print("Hello! 😀 I'm PsychoBot.\nMy thing is sentiment analysis.\n")
-        for batch in examples:
-            ml.train(batch, math.floor(0.9 * EXAMPLES))
-            count += 1
-            print('\r' + "Training 💪 - " + "{:.2f}".format(100 * (count / len(examples))) + "% | batch: " + str(
-                count) + "/" + str(len(examples)), end="")
-        print("\rTraining 💪 was completed successfully!")
-        amount_true = 0
-
-        # ["anger", "disgust", "fear", "joy", "sadness"]
-        # anger, disgust, fear, joy, sadness
-        # happy, anger, sadness
-        # admiration
-        # amusement
-        # anger
-        # annoyance
-        # approval
-        # caring
-        # confusion
-        # curiosity
-        # desire
-        # disappointment
-        # disapproval
-        # disgust
-        # embarrassment
-        # enthusiasm
-        # fear
-        # gratitude
-        # grief
-        # happy
-        # love
-        # worry
-        # optimism
-        # pride
-        # realization
-        # relief
-        # remorse
-        # sadness
-        # surprise
-        # neutral
 
         batchlen = 0
-        for batch in examples:
-            batchlen = len(batch) - math.floor(0.9 * EXAMPLES)
-            for example in batch[math.floor(0.9 * EXAMPLES):]:
-                ls = []
-                up_index = 0
-                for i in range(len(list_of_feelings)):
-                    ls.append(example[1][i])
-                    if i > 0:
-                        if ls[i] > ls[i - 1]:
-                            up_index = i
+        amount_true = 0
 
-                if check_input(example[0], ml, str(ls), list_of_feelings[up_index], up_index, list_of_feelings):
-                    amount_true += 1
+        print("Hello! 😀 I'm PsychoBot.\nMy thing is sentiment analysis.\n")
+        for epoch in range(EPOCHES):
+            print("EPOCH: " + str(epoch))
+            for batch in examples:
+                ml.train(batch, math.floor(0.9 * EXAMPLES))
+                count += 1
+                print('\r' + "Training 💪 - " + "{:.2f}".format(100 * (count / len(examples))) + "% | batch: " + str(
+                    count) + "/" + str(len(examples)), end="")
+            print("\rTraining 💪 was completed successfully!")
+            amount_true = 0
 
-        # print(amount_true, EXAMPLES)
+            # ["anger", "disgust", "fear", "joy", "sadness"]
+            # anger, disgust, fear, joy, sadness
+            # happy, anger, sadness
+            # admiration
+            # amusement
+            # anger
+            # annoyance
+            # approval
+            # caring
+            # confusion
+            # curiosity
+            # desire
+            # disappointment
+            # disapproval
+            # disgust
+            # embarrassment
+            # enthusiasm
+            # fear
+            # gratitude
+            # grief
+            # happy
+            # love
+            # worry
+            # optimism
+            # pride
+            # realization
+            # relief
+            # remorse
+            # sadness
+            # surprise
+            # neutral
 
-        # for i in range(len(list_of_feelings)):
-        #     try:
-        #         print("Success for " + list_of_feelings[i] + ": " + str(
-        #             (100 * amount_true_feel[i]) / (amount_true_feel[i] + amount_false_feel[i])) + "%")
-        #     except Exception as e:
-        #         print("Success for " + list_of_feelings[i] + ": There was no such feeling")
-        #
-        #     try:
-        #         print("Inverse success for " + list_of_feelings[i] + ": " + str(
-        #             (100 * amount_true_feel[i]) / (amount_true_feel[i] + amount_false_feel_inv[i])) + "%")
-        #     except Exception as e:
-        #         print("Inverse success for " + list_of_feelings[i] + ": Didn't even guess ;)")
-        #     print()
+            batchlen = 0
+            for batch in examples:
+                batchlen = len(batch) - math.floor(0.9 * EXAMPLES)
+                for example in batch[math.floor(0.9 * EXAMPLES):]:
+                    ls = []
+                    up_index = 0
+                    for i in range(len(list_of_feelings)):
+                        ls.append(example[1][i])
+                        if i > 0:
+                            if ls[i] > ls[i - 1]:
+                                up_index = i
 
-        print("General percents of success: " + str((100 * amount_true) / batchlen) + "%")
-        print()
+                    if check_input(example[0], ml, str(ls), list_of_feelings[up_index], up_index, list_of_feelings):
+                        amount_true += 1
+
+            # print(amount_true, EXAMPLES)
+
+            # for i in range(len(list_of_feelings)):
+            #     try:
+            #         print("Success for " + list_of_feelings[i] + ": " + str(
+            #             (100 * amount_true_feel[i]) / (amount_true_feel[i] + amount_false_feel[i])) + "%")
+            #     except Exception as e:
+            #         print("Success for " + list_of_feelings[i] + ": There was no such feeling")
+            #
+            #     try:
+            #         print("Inverse success for " + list_of_feelings[i] + ": " + str(
+            #             (100 * amount_true_feel[i]) / (amount_true_feel[i] + amount_false_feel_inv[i])) + "%")
+            #     except Exception as e:
+            #         print("Inverse success for " + list_of_feelings[i] + ": Didn't even guess ;)")
+            #     print()
+
+            print("General percents of success: " + str((100 * amount_true) / batchlen) + "%")
+            print()
         return (100 * amount_true) / batchlen
 
     #     print(
@@ -310,8 +316,6 @@ def main():
             with open('list.json', 'r') as f:
                 list_of_feelings = json.load(f)
             ml = machine_with_params(list_of_feelings)
-
-
 
 
 if __name__ == '__main__':

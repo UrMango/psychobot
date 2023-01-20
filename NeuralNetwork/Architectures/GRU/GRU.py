@@ -2,7 +2,7 @@ import numpy as np
 from NeuralNetwork.Architectures import Architecture
 from NeuralNetwork.Utillities.activation_functions import Sigmoid, Tanh
 from NeuralNetwork.Architectures.LSTM.OutputCell import OutputCell
-from NeuralNetwork.Architectures.LSTM.Cell import Cell
+from NeuralNetwork.Architectures.GRU.Cell import Cell
 import pandas as pd
 from gensim import models, similarities, downloader
 import logging
@@ -22,11 +22,12 @@ beta1 = 0.90
 beta2 = 0.99
 
 
-class LSTM(Architecture):
+class GRU(Architecture):
     # Constructor
     def __init__(self, list_of_feelings, hidden_units=256, learning_rate=0.001, std=0.01, embed=False):
-        super().__init__(ArchitectureType.LSTM)
+        super().__init__(ArchitectureType.GRU)
 
+        self.loss = [0]
         self.parameters = dict()
         self.input_units = INPUT_UNITS
         self.output_units = len(list_of_feelings)
@@ -45,76 +46,54 @@ class LSTM(Architecture):
     def initialize_parameters(self, std):
         mean = 0
 
-        # gates
-        forget_gate_weights = np.random.normal(mean, std, (self.input_units + self.hidden_units, self.hidden_units))
-        input_gate_weights = np.random.normal(mean, std, (self.input_units + self.hidden_units, self.hidden_units))
-        output_gate_weights = np.random.normal(mean, std, (self.input_units + self.hidden_units, self.hidden_units))
-        gate_gate_weights = np.random.normal(mean, std, (self.input_units + self.hidden_units, self.hidden_units))
+        input_weights = np.random.normal(mean, std, (self.hidden_units, self.input_units))
+        hidden_weights = np.random.normal(mean, std, (self.hidden_units,  self.hidden_units))
+        output_weights = np.random.normal(mean, std, (self.output_units,  self.hidden_units))
 
-        # hidden to output weights
-        hidden_output_weights = np.random.normal(mean, std, (self.hidden_units, self.output_units))
+        # Creating matrix with one colum because we need a vector
+        hidden_biases = np.random.normal(mean, std, (self.hidden_units, 1))
+        output_biases = np.random.normal(mean, std, (self.hidden_units, 1))
 
-        self.parameters['fgw'] = forget_gate_weights
-        self.parameters['igw'] = input_gate_weights
-        self.parameters['ogw'] = output_gate_weights
-        self.parameters['ggw'] = gate_gate_weights
-        self.parameters['how'] = hidden_output_weights
+        self.parameters['wx'] = input_weights
+        self.parameters['wh'] = hidden_weights
+        self.parameters['wo'] = output_weights
+        self.parameters['bh'] = hidden_biases
+        self.parameters['bo'] = output_biases
 
         return self.parameters
 
     def forward_propagation(self, sentence):
+        # Store the activations of all the unrollings.
+        hidden_cache = dict()
 
-        word_size = len(sentence[0])
 
-        # to store the activations of all the unrollings.
-        lstm_cache = dict()
-        activation_cache = dict()
-        cell_cache = dict()
-        output_cache = dict()
-        embedding_cache = dict()
-
-        # initial activation_matrix(a0) and cell_matrix(c0)
-        a0 = np.zeros([self.hidden_units], dtype=np.float32)
-        c0 = np.zeros([self.hidden_units], dtype=np.float32)
+        previous_hidden = np.zeros([self.hidden_units], dtype=np.float32)
 
         # store the initial activations in cache
-        activation_cache['a0'] = a0
-        cell_cache['c0'] = c0
+        hidden_cache['h0'] = previous_hidden
 
-        output_at = None
+        for i in range(len(sentence)):
 
-        # unroll the names
-        for i in range(len(sentence) - 1): # maybe... You can do that without the -1 and it will be better
-            # get first character batch
             word = sentence[i]
 
-            # lstm cell
-            lstm_activations, ct, at = Cell.activate(word, a0, c0, self.parameters)
-
-            output_at = at
-            # print(output_at)
+            # gru cell
+            hidden_t = Cell.activate(word, previous_hidden , self.parameters)
 
             # store the time 't' activations in caches
-            lstm_cache['lstm' + str(i + 1)] = lstm_activations
-            activation_cache['a' + str(i + 1)] = at
-            cell_cache['c' + str(i + 1)] = ct
+            hidden_cache['h' + str(i + 1)] = hidden_t
 
-            # update a0 and c0 to new 'at' and 'ct' for next lstm cell
-            a0 = at
-            c0 = ct
+            # update pervious_hidden to the curren hidden
+            previous_hidden = hidden_t
 
         # output cell
-        ot = OutputCell.activate(output_at, self.parameters)
+        output, softmax = OutputCell.activate(hidden_t, self.parameters)
 
-        output_cache['o'] = ot
-
-        return lstm_cache, activation_cache, cell_cache, output_cache
+        return hidden_cache, output, softmax
 
     # backpropagation
-    def backward_propagation(self, sentence, sentence_labels, lstm_cache, activation_cache, cell_cache, output_cache):
+    def backward_propagation(self, sentence, sentence_labels, hidden_cache,output, softmax):
         # calculate output errors
-        output_error_cache, activation_error_cache = OutputCell.calculate_error(sentence_labels, output_cache,
-                                                                                self.parameters)
+        self.loss, output_weights_error, output_biases_error, hidden_error = OutputCell.calculate_error(sentence_labels,hidden_cache, output , softmax, self.parameters, self.loss)
 
         # to store lstm error for each time step
         lstm_error_cache = dict()
