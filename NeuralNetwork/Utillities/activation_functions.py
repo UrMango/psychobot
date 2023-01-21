@@ -36,10 +36,9 @@ class Softmax:
 		return np.log(x / 1 - x)
 
 	@staticmethod
-<<<<<<< Updated upstream
 	def derivative_softmax_and_log_by_func(s):
 		return s-1
-=======
+
 	def derivative_softmax(x):
 		return np.exp(-x) / pow((1 + np.exp(-x)), 2)
 
@@ -51,4 +50,3 @@ class OneMinus:
 	@staticmethod
 	def derivative_one_minus(x):
 		return -1
->>>>>>> Stashed changes
