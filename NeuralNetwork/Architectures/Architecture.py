@@ -6,6 +6,7 @@ class ArchitectureType(Enum):
     LSTM = 1
     GRU = 2
     CNN = 3
+    NEW_LSTM = 4
 
 class Architecture:
     def __init__(self, arch_type):
