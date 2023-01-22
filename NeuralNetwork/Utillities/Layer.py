@@ -5,14 +5,19 @@ class LayerType(Enum):
     NONE = 0
     ACTIVATION = 1
     MIDDLE = 2
+    MULTIPLY = 3
+    SOFTMAX = 4
 
 class Layer:
     def __init__(self):
-        self.input = None
+        self.inputs_id = None #All the id of layers that this layer get as input
+        self.outputs_id = None #All the id of the layers that get this layer as input
         self.output = None
-        self.type = LayerType.NONE
 
-    def forward_propagation(self, input_data):
+        self.type = LayerType.NONE
+        self.id = None
+
+    def forward_propagation(self, output_layers_dict, time):
         raise NotImplementedError
 
     def backward_propagation(self, output_nudge):
