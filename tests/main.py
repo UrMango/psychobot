@@ -12,6 +12,7 @@ from Dataset.dataset_loader import Dataset
 
 from NeuralNetwork.Architectures.Basic import Basic
 from NeuralNetwork.Architectures.LSTM.LSTM import LSTM
+from NeuralNetwork.Architectures.NEW_LSTM.NEW_LSTM import NEW_LSTM
 from NeuralNetwork.Architectures.GRU.GRU import GRU
 
 from NeuralNetwork.Utillities.activation_functions import Sigmoid
@@ -316,7 +317,7 @@ def main():
                 with open('list.json', 'r') as f:
                     list_of_feelings = json.load(f)
                 if arch == "LSTM":
-                    ml = machine(False, list_of_feelings, LSTM(list_of_feelings))
+                    ml = machine(False, list_of_feelings, NEW_LSTM(list_of_feelings))
                 if arch == "GRU":
                     ml = machine(False, list_of_feelings, GRU(list_of_feelings))
         elif choice == 2:
