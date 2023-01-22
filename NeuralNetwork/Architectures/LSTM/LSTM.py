@@ -24,7 +24,7 @@ beta2 = 0.99
 
 class LSTM(Architecture):
     # Constructor
-    def __init__(self, list_of_feelings, hidden_units=256, learning_rate=0.001, std=0.01, embed=False):
+    def __init__(self, list_of_feelings, hidden_units=256, learning_rate=0.0008, std=0.05, embed=False):
         super().__init__(ArchitectureType.LSTM)
 
         self.parameters = dict()

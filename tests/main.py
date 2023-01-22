@@ -12,6 +12,7 @@ from Dataset.dataset_loader import Dataset
 
 from NeuralNetwork.Architectures.Basic import Basic
 from NeuralNetwork.Architectures.LSTM.LSTM import LSTM
+from NeuralNetwork.Architectures.GRU.GRU import GRU
 
 from NeuralNetwork.Utillities.activation_functions import Sigmoid
 import random
@@ -23,12 +24,12 @@ from gensim import downloader
 
 import re
 
-EPOCHES = 20
+EPOCHES = 2
 
 MIN_NUM = 0
 MAX_NUM = 0.25
 
-BATCHES = 1
+BATCHES = 300
 EXAMPLES = 30000
 
 nlp = spacy.load("en_core_web_sm")
@@ -86,8 +87,16 @@ def machine_with_params(list_of_feelings):
         print("std: " + str(std["std"]) + " - " + str(std["precents"]) + "%")
 
 
-def machine(answer, list_of_feelings, hidden_units=256, learning_rate=0.0008, std=0.05):
-    ml = NeuralNetwork(LSTM(list_of_feelings, hidden_units, learning_rate, std))
+def separate_dataset_to_batches(dataset, n_batches):
+    batches = []
+    batch_size = len(dataset) // n_batches
+    for i in range(0, len(dataset), batch_size):
+        batches.append(dataset[i:i + batch_size])
+    return batches
+
+
+def machine(answer, list_of_feelings, architecture):
+    ml = NeuralNetwork(architecture)
 
     while True:
         if answer:
@@ -108,83 +117,87 @@ def machine(answer, list_of_feelings, hidden_units=256, learning_rate=0.0008, st
         batchlen = 0
         amount_true = 0
 
+        examples = separate_dataset_to_batches(examples[0], BATCHES)
         print("Hello! 😀 I'm PsychoBot.\nMy thing is sentiment analysis.\n")
-        for epoch in range(EPOCHES):
-            print("EPOCH: " + str(epoch))
+        if architecture.type == ArchitectureType.GRU:
+            ml.train(examples, EPOCHES) # need to separate between training examples and testing examples
+        else:
             for batch in examples:
                 ml.train(batch, math.floor(0.9 * EXAMPLES))
                 count += 1
                 print('\r' + "Training 💪 - " + "{:.2f}".format(100 * (count / len(examples))) + "% | batch: " + str(
                     count) + "/" + str(len(examples)), end="")
-            print("\rTraining 💪 was completed successfully!")
-            amount_true = 0
+        print("\rTraining 💪 was completed successfully!")
+        amount_true = 0
 
-            # ["anger", "disgust", "fear", "joy", "sadness"]
-            # anger, disgust, fear, joy, sadness
-            # happy, anger, sadness
-            # admiration
-            # amusement
-            # anger
-            # annoyance
-            # approval
-            # caring
-            # confusion
-            # curiosity
-            # desire
-            # disappointment
-            # disapproval
-            # disgust
-            # embarrassment
-            # enthusiasm
-            # fear
-            # gratitude
-            # grief
-            # happy
-            # love
-            # worry
-            # optimism
-            # pride
-            # realization
-            # relief
-            # remorse
-            # sadness
-            # surprise
-            # neutral
+        # ["anger", "disgust", "fear", "joy", "sadness"]
+        # anger, disgust, fear, joy, sadness
+        # happy, anger, sadness
+        # admiration
+        # amusement
+        # anger
+        # annoyance
+        # approval
+        # caring
+        # confusion
+        # curiosity
+        # desire
+        # disappointment
+        # disapproval
+        # disgust
+        # embarrassment
+        # enthusiasm
+        # fear
+        # gratitude
+        # grief
+        # happy
+        # love
+        # worry
+        # optimism
+        # pride
+        # realization
+        # relief
+        # remorse
+        # sadness
+        # surprise
+    # neutral
+    #
+    #     batchlen = 0
+    #     for batch in examples:
+    #         batchlen = len(batch) - math.floor(0.9 * EXAMPLES)
+    #         for example in batch[math.floor(0.9 * EXAMPLES):]:
+    #             ls = []
+    #             up_index = 0
+    #             for i in range(len(list_of_feelings)):
+    #                 ls.append(example[1][i])
+    #                 if i > 0:
+    #                     if ls[i] > ls[i - 1]:
+    #                         up_index = i
+    #
+    #             if check_input(example[0], ml, str(ls), list_of_feelings[up_index], up_index, list_of_feelings):
+    #                 amount_true += 1
 
-            batchlen = 0
-            for batch in examples:
-                batchlen = len(batch) - math.floor(0.9 * EXAMPLES)
-                for example in batch[math.floor(0.9 * EXAMPLES):]:
-                    ls = []
-                    up_index = 0
-                    for i in range(len(list_of_feelings)):
-                        ls.append(example[1][i])
-                        if i > 0:
-                            if ls[i] > ls[i - 1]:
-                                up_index = i
+        # print(amount_true, EXAMPLES)
 
-                    if check_input(example[0], ml, str(ls), list_of_feelings[up_index], up_index, list_of_feelings):
-                        amount_true += 1
+        # for i in range(len(list_of_feelings)):
+        #     try:
+        #         print("Success for " + list_of_feelings[i] + ": " + str(
+        #             (100 * amount_true_feel[i]) / (amount_true_feel[i] + amount_false_feel[i])) + "%")
+        #     except Exception as e:
+        #         print("Success for " + list_of_feelings[i] + ": There was no such feeling")
+        #
+        #     try:
+        #         print("Inverse success for " + list_of_feelings[i] + ": " + str(
+        #             (100 * amount_true_feel[i]) / (amount_true_feel[i] + amount_false_feel_inv[i])) + "%")
+        #     except Exception as e:
+        #         print("Inverse success for " + list_of_feelings[i] + ": Didn't even guess ;)")
+        #     print()
 
-            # print(amount_true, EXAMPLES)
+        # print("General percents of success: " + str((100 * amount_true) / batchlen) + "%")
+        # print()
+        #return (100 * amount_true) / batchlen
 
-            # for i in range(len(list_of_feelings)):
-            #     try:
-            #         print("Success for " + list_of_feelings[i] + ": " + str(
-            #             (100 * amount_true_feel[i]) / (amount_true_feel[i] + amount_false_feel[i])) + "%")
-            #     except Exception as e:
-            #         print("Success for " + list_of_feelings[i] + ": There was no such feeling")
-            #
-            #     try:
-            #         print("Inverse success for " + list_of_feelings[i] + ": " + str(
-            #             (100 * amount_true_feel[i]) / (amount_true_feel[i] + amount_false_feel_inv[i])) + "%")
-            #     except Exception as e:
-            #         print("Inverse success for " + list_of_feelings[i] + ": Didn't even guess ;)")
-            #     print()
-
-            print("General percents of success: " + str((100 * amount_true) / batchlen) + "%")
-            print()
-        return (100 * amount_true) / batchlen
+        return 0
 
     #     print(
     #         "Are the results fulfilling your satisfaction?\n1 - Yes. The student became the master\n2 - No. Learn more!")
@@ -284,6 +297,8 @@ def main():
     choice = 0
     ml = None
     while choice != 3:
+        print("The battle for the Throne of AI awaits, LSTM or GRU, which memory will you choose to lead your army?")
+        arch = input()
         print(
             "1 - Train the machine on prepared dataset\n2 - Train the machine on un-prepared dataset\n3 - Use working machine\n4 - I've seen enough")
         choice = int(input())
@@ -300,7 +315,10 @@ def main():
             else:
                 with open('list.json', 'r') as f:
                     list_of_feelings = json.load(f)
-                ml = machine(False, list_of_feelings, learning_rate=0.0008, std=0.05)
+                if arch == "LSTM":
+                    ml = machine(False, list_of_feelings, LSTM(list_of_feelings))
+                if arch == "GRU":
+                    ml = machine(False, list_of_feelings, GRU(list_of_feelings))
         elif choice == 2:
             print("Enter the list of feelings:")
             list_of_feelings = input()

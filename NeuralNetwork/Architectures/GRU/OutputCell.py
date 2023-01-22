@@ -1,51 +1,41 @@
 import numpy as np
 from NeuralNetwork.Utillities.activation_functions import Sigmoid, Tanh, Softmax
 
+
 class OutputCell:
 	@staticmethod
 	def activate(hidden, parameters):
 		# get outputs
-		output = np.add(np.matmul(parameters['wo'], hidden), parameters['bo'])
+		output = np.add(np.matmul(parameters['ow'], hidden), parameters['ob'])
 		softmax = Softmax.softmax(output)
 
 		return output, softmax
 
 	@staticmethod
-	def calculate_error(sentence_labels,hidden_cache, output , softmax, parameters, loss):
+	def calculate_error(sentence_labels , hidden_cache, output, softmax, parameters, loss, accuracy):
 		# to store the output errors for each time step
 		output_error = np.zeros([len(output)], dtype=np.float32)
+		loss.append(0)
 		for i in range(len(sentence_labels)):
-			if sentence_labels[i] == 1: 		#check how to add this value to the vector
-				for item in output_error:
-					loss[-1] += -np.log(softmax[i])  #add to loss the loss function
-					item += Softmax.derivative_softmax_and_log_by_func(softmax([i]))
-
-
-		output_weights = parameters['wo']
-
-		output_weights_error = np.matmul(output_error, hidden_cache[-1].T)
+			if sentence_labels[i] == 1: # check how to add this value to the vector
+				loss[-1] += -np.log(softmax[i])  # add to loss the loss function
+				for k in range(len(output_error)):
+					output_error[k] += Softmax.derivative_softmax_and_log_by_func(softmax[i]) #softmax[i]-1
+		true_feeling_index = 0
+		max_value = output[0]
+		for i, num in enumerate(output):
+			if num > max_value:
+				true_feeling_index = i
+				max_value = num
+		if sentence_labels[true_feeling_index] == 1: #he predicted right
+			accuracy.append(1)
+		else:
+			accuracy.append(0)
+		output_weights = parameters['ow']
+		output_weights_error = np.matmul(np.reshape(output_error, (len(output_error), 1)), np.reshape(hidden_cache[-1], (len(hidden_cache[-1]), 1)).T)
 		output_biases_error = output_error
 		hidden_error = np.matmul(output_weights.T, output_error)
 
-		return output_weights_error, output_biases_error, hidden_error, loss
+		return output_weights_error, output_biases_error, hidden_error, loss, accuracy
 
-	# calculate output cell derivatives
-	@staticmethod
-	def calculate_derivatives(output_error_cache, activation_cache, parameters):
-		# to store the sum of derivatives from each time step
-		dhow = np.zeros(parameters['how'].shape)
 
-		batch_size = activation_cache['a1'].shape[0]
-
-		# get output error
-		output_error = np.matrix(output_error_cache['eo'])
-
-		# get input activation
-		activation = np.matrix(activation_cache['a1'])
-		# print(activation.shape)
-		# print(output_error.shape)
-		# cal derivative and summing up!
-		ad = np.matmul(activation.T, output_error)
-		dhow += np.matmul(activation.T, output_error) / batch_size
-
-		return dhow

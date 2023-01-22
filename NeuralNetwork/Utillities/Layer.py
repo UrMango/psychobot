@@ -17,3 +17,6 @@ class Layer:
 
     def backward_propagation(self, output_nudge):
         raise NotImplementedError
+
+    def update_parameters(self, dict_nudge):
+        raise NotImplementedError

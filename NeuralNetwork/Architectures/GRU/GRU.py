@@ -1,7 +1,7 @@
 import numpy as np
 from NeuralNetwork.Architectures import Architecture
 from NeuralNetwork.Utillities.activation_functions import Sigmoid, Tanh
-from NeuralNetwork.Architectures.LSTM.OutputCell import OutputCell
+from NeuralNetwork.Architectures.GRU.OutputCell import OutputCell
 from NeuralNetwork.Architectures.GRU.Cell import Cell
 import pandas as pd
 from gensim import models, similarities, downloader
@@ -9,6 +9,8 @@ import logging
 import re
 import random
 import spacy
+import matplotlib.pyplot as plt  #for visualization
+
 
 ArchitectureType = Architecture.ArchitectureType
 Architecture = Architecture.Architecture
@@ -27,13 +29,15 @@ class GRU(Architecture):
     def __init__(self, list_of_feelings, hidden_units=256, learning_rate=0.001, std=0.01, embed=False):
         super().__init__(ArchitectureType.GRU)
 
-        self.loss = [0]
+        self.loss = []
+        self.accuracy = []
         self.parameters = dict()
         self.input_units = INPUT_UNITS
         self.output_units = len(list_of_feelings)
         self.list_of_feelings = list_of_feelings
         self.hidden_units = hidden_units
         self.learning_rate = learning_rate
+        self.error_dict = {}
 
         self.initialize_parameters(std)
 
@@ -47,212 +51,79 @@ class GRU(Architecture):
         mean = 0
 
         input_weights = np.random.normal(mean, std, (self.hidden_units, self.input_units))
-        hidden_weights = np.random.normal(mean, std, (self.hidden_units,  self.hidden_units))
-        output_weights = np.random.normal(mean, std, (self.output_units,  self.hidden_units))
+        hidden_weights = np.random.normal(mean, std, (self.hidden_units, self.hidden_units))
+        output_weights = np.random.normal(mean, std, (self.output_units, self.hidden_units))
 
         # Creating matrix with one colum because we need a vector
-        hidden_biases = np.random.normal(mean, std, (self.hidden_units, 1))
-        output_biases = np.random.normal(mean, std, (self.hidden_units, 1))
+        hidden_biases = np.random.normal(mean, std, self.hidden_units)
+        output_biases = np.random.normal(mean, std, self.output_units)
 
-        self.parameters['wx'] = input_weights
-        self.parameters['wh'] = hidden_weights
-        self.parameters['wo'] = output_weights
-        self.parameters['bh'] = hidden_biases
-        self.parameters['bo'] = output_biases
-
+        self.parameters['iw'] = input_weights
+        self.parameters['hw'] = hidden_weights
+        self.parameters['ow'] = output_weights
+        self.parameters['hb'] = hidden_biases
+        self.parameters['ob'] = output_biases
+        self.error_dict['iwe'] = 0
+        self.error_dict['hwe'] = 0
+        self.error_dict['owe'] = 0
+        self.error_dict['hbe'] = 0
+        self.error_dict['obe'] = 0
         return self.parameters
 
     def forward_propagation(self, sentence):
-        # Store the activations of all the unrollings.
-        hidden_cache = dict()
-
-
         previous_hidden = np.zeros([self.hidden_units], dtype=np.float32)
 
+        # Store the activations of all the unrollings.
         # store the initial activations in cache
-        hidden_cache['h0'] = previous_hidden
+        hidden_cache = [previous_hidden]
 
         for i in range(len(sentence)):
-
             word = sentence[i]
 
             # gru cell
-            hidden_t = Cell.activate(word, previous_hidden , self.parameters)
+            hidden_t = Cell.activate(word, previous_hidden, self.parameters)
 
             # store the time 't' activations in caches
-            hidden_cache['h' + str(i + 1)] = hidden_t
+            hidden_cache.append(hidden_t)
 
             # update pervious_hidden to the curren hidden
             previous_hidden = hidden_t
 
         # output cell
-        output, softmax = OutputCell.activate(hidden_t, self.parameters)
+        output, softmax = OutputCell.activate(hidden_cache[-1], self.parameters)
 
         return hidden_cache, output, softmax
 
     # backpropagation
-    def backward_propagation(self, sentence, sentence_labels, hidden_cache,output, softmax):
+    def backward_propagation(self, sentence, sentence_labels, hidden_cache, output, softmax):
         # calculate output errors
-        self.loss, output_weights_error, output_biases_error, hidden_error = OutputCell.calculate_error(sentence_labels,hidden_cache, output , softmax, self.parameters, self.loss)
+        output_weights_error, output_biases_error, hidden_error, self.loss, self.accuracy = OutputCell.calculate_error(
+            sentence_labels, hidden_cache, output, softmax, self.parameters, self.loss, self.accuracy)
 
-        # to store lstm error for each time step
-        lstm_error_cache = dict()
+        self.error_dict["owe"] += output_weights_error
+        self.error_dict["obe"] += output_biases_error
 
-        # next activation error
-        # next cell error
-        # for last cell will be zero
-        eat = np.zeros(activation_error_cache['ea'].shape)
-        ect = np.zeros(activation_error_cache['ea'].shape)
+        for i in range(len(sentence), 0, -1):
+            before_hidden = hidden_cache[i-1]
+            hidden_error, input_weights_error, hidden_weights_error, hidden_biases_error = Cell.calculate_error(
+                                            sentence[i-1], hidden_error, hidden_cache[i], before_hidden, self.parameters)
 
-        # calculate all lstm cell errors (going from last time-step to the first time step)
-        for i in range(len(lstm_cache), 0, -1):
-            # calculate the lstm errors for this time step 't'
-            pae, pce, le = Cell.calculate_error(activation_error_cache['ea'], eat, ect,
-                                                    self.parameters, lstm_cache['lstm' + str(i)],
-                                                    cell_cache['c' + str(i)], cell_cache['c' + str(i - 1)])
+            self.error_dict["iwe"] += input_weights_error
+            self.error_dict["hwe"] += hidden_weights_error
+            self.error_dict["hbe"] += hidden_biases_error
 
-            # store the lstm error in dict
-            lstm_error_cache['elstm' + str(i)] = le
+    def update_parameters(self, number_of_examples):
+        for key in self.error_dict.keys():
+            self.error_dict[key] = self.error_dict[key] / number_of_examples
 
-            # update the next activation error and next cell error for previous cell
-            eat = pae
-            ect = pce
-
-        # calculate output cell derivatives
-        derivatives = dict()
-        derivatives['dhow'] = OutputCell.calculate_derivatives(output_error_cache, activation_cache, self.parameters)
-
-        # calculate lstm cell derivatives for each time step and store in lstm_derivatives dict
-        lstm_derivatives = dict()
-        for i in range(1, len(lstm_error_cache) + 1):
-            lstm_derivatives['dlstm' + str(i)] = Cell.calculate_derivatives(
-                lstm_error_cache['elstm' + str(i)],
-                activation_cache['a' + str(i - 1)],
-                len(sentence)
-            )
-
-        # initialize the derivatives to zeros
-        derivatives['dfgw'] = np.zeros(self.parameters['fgw'].shape)
-        derivatives['digw'] = np.zeros(self.parameters['igw'].shape)
-        derivatives['dogw'] = np.zeros(self.parameters['ogw'].shape)
-        derivatives['dggw'] = np.zeros(self.parameters['ggw'].shape)
-
-        # sum up the derivatives for each time step
-        for i in range(1, len(lstm_error_cache) + 1):
-            derivatives['dfgw'] += lstm_derivatives['dlstm' + str(i)]['dfgw']
-            derivatives['digw'] += lstm_derivatives['dlstm' + str(i)]['digw']
-            derivatives['dogw'] += lstm_derivatives['dlstm' + str(i)]['dogw']
-            derivatives['dggw'] += lstm_derivatives['dlstm' + str(i)]['dggw']
-
-        return derivatives
-
-    def update_parameters(self, derivatives, V, S, t):
-        # get derivatives
-        dfgw = derivatives['dfgw']
-        digw = derivatives['digw']
-        dogw = derivatives['dogw']
-        dggw = derivatives['dggw']
-        dhow = derivatives['dhow']
-
-        # get parameters
-        fgw = self.parameters['fgw']
-        igw = self.parameters['igw']
-        ogw = self.parameters['ogw']
-        ggw = self.parameters['ggw']
-        how = self.parameters['how']
-
-        # get V parameters
-        vfgw = V['vfgw']
-        vigw = V['vigw']
-        vogw = V['vogw']
-        vggw = V['vggw']
-        vhow = V['vhow']
-
-        # get S parameters
-        sfgw = S['sfgw']
-        sigw = S['sigw']
-        sogw = S['sogw']
-        sggw = S['sggw']
-        show = S['show']
-
-        # calculate the V parameters from V and current derivatives
-        vfgw = (beta1 * vfgw + (1 - beta1) * dfgw)
-        vigw = (beta1 * vigw + (1 - beta1) * digw)
-        vogw = (beta1 * vogw + (1 - beta1) * dogw)
-        vggw = (beta1 * vggw + (1 - beta1) * dggw)
-        vhow = (beta1 * vhow + (1 - beta1) * dhow)
-
-        # calculate the S parameters from S and current derivatives
-        sfgw = (beta2 * sfgw + (1 - beta2) * (dfgw ** 2))
-        sigw = (beta2 * sigw + (1 - beta2) * (digw ** 2))
-        sogw = (beta2 * sogw + (1 - beta2) * (dogw ** 2))
-        sggw = (beta2 * sggw + (1 - beta2) * (dggw ** 2))
-        show = (beta2 * show + (1 - beta2) * (dhow ** 2))
-
-        # update the parameters
-        fgw = fgw - self.learning_rate * ((vfgw) / (np.sqrt(sfgw) + 1e-6))
-        igw = igw - self.learning_rate * ((vigw) / (np.sqrt(sigw) + 1e-6))
-        ogw = ogw - self.learning_rate * ((vogw) / (np.sqrt(sogw) + 1e-6))
-        ggw = ggw - self.learning_rate * ((vggw) / (np.sqrt(sggw) + 1e-6))
-        how = how - self.learning_rate * ((vhow) / (np.sqrt(show) + 1e-6))
-
-        # store the new weights
-        self.parameters['fgw'] = fgw
-        self.parameters['igw'] = igw
-        self.parameters['ogw'] = ogw
-        self.parameters['ggw'] = ggw
-        self.parameters['how'] = how
-
-        # store the new V parameters
-        V['vfgw'] = vfgw
-        V['vigw'] = vigw
-        V['vogw'] = vogw
-        V['vggw'] = vggw
-        V['vhow'] = vhow
-
-        # store the s parameters
-        S['sfgw'] = sfgw
-        S['sigw'] = sigw
-        S['sogw'] = sogw
-        S['sggw'] = sggw
-        S['show'] = show
-
-        return V, S
-
-    def initialize_V(self):
-        Vfgw = np.zeros(self.parameters['fgw'].shape)
-        Vigw = np.zeros(self.parameters['igw'].shape)
-        Vogw = np.zeros(self.parameters['ogw'].shape)
-        Vggw = np.zeros(self.parameters['ggw'].shape)
-        Vhow = np.zeros(self.parameters['how'].shape)
-
-        V = dict()
-        V['vfgw'] = Vfgw
-        V['vigw'] = Vigw
-        V['vogw'] = Vogw
-        V['vggw'] = Vggw
-        V['vhow'] = Vhow
-        return V
-
-    def initialize_S(self):
-        Sfgw = np.zeros(self.parameters['fgw'].shape)
-        Sigw = np.zeros(self.parameters['igw'].shape)
-        Sogw = np.zeros(self.parameters['ogw'].shape)
-        Sggw = np.zeros(self.parameters['ggw'].shape)
-        Show = np.zeros(self.parameters['how'].shape)
-
-        S = dict()
-        S['sfgw'] = Sfgw
-        S['sigw'] = Sigw
-        S['sogw'] = Sogw
-        S['sggw'] = Sggw
-        S['show'] = Show
-        return S
+        for key in self.parameters.keys():
+            self.parameters[key] -= self.learning_rate * self.error_dict[key+"e"]
+            self.error_dict[key + "e"] = 0
 
     def run_model(self, input_data):
-        lstm_cache, activation_cache, cell_cache, output_cache = self.forward_propagation(input_data)
+        hidden_cache, output, softmax = self.forward_propagation(input_data)
 
-        return output_cache['o']
+        return output
 
     def run_model_with_embedding(self, input_string):
         regex = re.compile(r'[^a-zA-Z\s]')
@@ -284,7 +155,6 @@ class GRU(Architecture):
         res = self.run_model(input_data)
         highest = [0, 0]
 
-
         for i in range(len(res)):
             if res[i] > highest[0]:
                 highest[0] = res[i]
@@ -293,32 +163,69 @@ class GRU(Architecture):
         for i in range(len(self.list_of_feelings)):
             emotion = self.list_of_feelings[i]
             dict[emotion] = res[i]
-        return (self.list_of_feelings[highest[1]],dict)
+        return (self.list_of_feelings[highest[1]], dict)
+
+    def print_graph(self):
+        avg_loss = list()
+        avg_acc = list()
+        i = 0
+        while i < len(self.loss):
+            avg_loss.append(np.mean(self.loss[i:i + 300]))
+            avg_acc.append(np.mean(self.accuracy[i:i + 300]))
+            i += 300
+
+        plt.plot(list(range(len(avg_loss))), avg_loss)
+        plt.xlabel("x")
+        plt.ylabel("Loss (Avg of 30 batches)")
+        plt.title("Loss Graph")
+        plt.show()
+
+        plt.plot(list(range(len(avg_acc))), avg_acc)
+        plt.xlabel("x")
+        plt.ylabel("Accuracy (Avg of 30 batches)")
+        plt.title("Accuracy Graph")
+        plt.show()
 
     # train function
-    def train(self, train_dataset, iters=1000):
+    def train(self, train_dataset, epochs):
+        for i in range(epochs):
+            batch_i = -1
+            for batch in train_dataset:
+                batch_i += 1
+                print()
+                print("Number of Epochs: " + str(i))
+                print("Number of Batch: " + str(batch_i))
+                example_k = -1
+                for example in batch:
+                    example_k += 1
+                    if len(example[0]) == 0:
+                        continue
 
-        # initialize the V and S parameters for Adam
-        V = self.initialize_V()
-        S = self.initialize_S()
+                    # forward propagation
+                    hidden_cache, output, softmax = self.forward_propagation(example[0])
 
-        for step in range(iters):
-            # get batch dataset
-            index = step % len(train_dataset)
-            sentence = train_dataset[index]
+                    # backward propagation #sentence, sentence_labels, hidden_cache, output, softmax
+                    self.backward_propagation(example[0], example[1], hidden_cache,output, softmax)
 
-            if len(sentence) == 0:
-                continue
+                    # print('\r' + "Training LSTM 💪 - " +
+                    #       "Batches: {:.2f}".format(100 * (batch_i / len(train_dataset))) +
+                    #       "% / batch: " + str(batch_i) + "/" + str(len(train_dataset)))
+                          # " | Examples: {:.2f}".format(100 * (example_k / len(batch))) +
+                          # "% / example: " + str(example_k) + "/" + str(len(batch)), end="")
+                self.update_parameters(len(batch))
+                avg_loss = 0
+                avg_accuracy = 0
+                for j in range(len(self.loss) - len(batch), len(self.loss)):
+                    avg_loss += self.loss[j]
+                    avg_accuracy += self.accuracy[j]
+                avg_loss = avg_loss / len(batch)
+                avg_accuracy = avg_accuracy / len(batch)
 
-            # forward propagation
-            lstm_cache, activation_cache, cell_cache, output_cache = self.forward_propagation(sentence[0])
+                print("For this batch")
+                print("Loss: " + str(avg_loss))
+                print("Accuracy: " + str(avg_accuracy))
+        print("If this number don't match you got a problem: " + str(len(self.loss)) + ", " + str(len(self.accuracy)))
 
-            # backward propagation
-            derivatives = self.backward_propagation(sentence[0], sentence[1], lstm_cache, activation_cache, cell_cache, output_cache)
-
-            # update the parameters
-            V, S = self.update_parameters(derivatives, V, S, step)
-            print('\r' + "Training LSTM 💪 - " + "{:.2f}".format(100 * (step / iters)) + "% | example: " + str(
-                step) + "/" + str(iters), end="")
+        self.print_graph()
 
         return self.parameters
