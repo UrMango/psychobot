@@ -100,7 +100,7 @@ class NEW_LSTM(Architecture):
 
         vector_sentence = []
         for t in range(len(sentence)):
-            vector_sentence.append(np.zeros((1, len(sentence[0])), dtype=np.float32))
+            vector_sentence.append(np.zeros((1, len(sentence[0])), dtype=np.float32))  #convert list to matrix with one raw (vector)
             for i in range(len(sentence[t])):
                 vector_sentence[t][0][i] = sentence[t][i]
 
