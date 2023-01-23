@@ -100,7 +100,7 @@ class NEW_LSTM(Architecture):
 
         vector_sentence = []
         for t in range(len(sentence)):
-            vector_sentence.append(np.zeros((1, len(sentence[0])), dtype=np.float32))  #convert list to matrix with one raw (vector)
+            vector_sentence.append(np.zeros((1, len(sentence[0])), dtype=np.float32))  # convert list to matrix with one raw (vector)
             for i in range(len(sentence[t])):
                 vector_sentence[t][0][i] = sentence[t][i]
 
@@ -113,8 +113,9 @@ class NEW_LSTM(Architecture):
                 self.output_layers_dict = self.layers_dict[key].forward_propagation(self.output_layers_dict, t)
 
         # output cell
-        self.output_layers_dict = self.layers_dict["sr"].forward_propagation(self.output_layers_dict, len(sentence))
-        self.output_layers_dict = self.layers_dict["s"].forward_propagation(self.output_layers_dict, len(sentence))
+        time = len(sentence)  # this is the time of the last cell
+        self.output_layers_dict = self.layers_dict["sr"].forward_propagation(self.output_layers_dict, time)
+        self.output_layers_dict = self.layers_dict["s"].forward_propagation(self.output_layers_dict, time)
 
         return self.output_layers_dict["s"]
 
@@ -133,7 +134,6 @@ class NEW_LSTM(Architecture):
     def update_parameters(self, size):
         for key in self.layers_dict.keys():
             self.layers_dict[key].nudge(self.nudge_layers_dict, self.learning_rate, size)
-
 
     def run_model(self, input_data):
         hidden_cache, output, softmax = self.forward_propagation(input_data)
@@ -178,7 +178,7 @@ class NEW_LSTM(Architecture):
         for i in range(len(self.list_of_feelings)):
             emotion = self.list_of_feelings[i]
             dict[emotion] = res[i]
-        return (self.list_of_feelings[highest[1]], dict)
+        return self.list_of_feelings[highest[1]], dict
 
     def print_graph(self):
         avg_loss = list()
