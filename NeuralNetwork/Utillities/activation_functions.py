@@ -28,8 +28,7 @@ class Sigmoid:
 class Softmax:
 	@staticmethod
 	def softmax(x):
-		x -= np.max(x)
-		return np.exp(x) / np.sum(np.exp(x), axis=0)
+		return np.exp(x) / np.sum(np.exp(x))
 
 	@staticmethod
 	def inverse_softmax(x):
@@ -50,3 +49,4 @@ class OneMinus:
 	@staticmethod
 	def derivative_one_minus(x):
 		return -1
+

@@ -42,11 +42,14 @@ class MultiplyLayer(Layer):
 				key = "d"+input_id[:-1]+str(t-1)
 			else:
 				key = "d"+input_id+time
-			nudge_layers_dict[key] = nudges[i]
+			if key not in nudge_layers_dict.keys():
+				nudge_layers_dict[key] = nudges[i]
+			else:
+				nudge_layers_dict[key] += nudges[i]
 			i += 1
 
 		self.input = []
 		return nudge_layers_dict
 
-	def nudge(self, nudge_layers_dict, learning_rate):
+	def nudge(self, nudge_layers_dict, learning_rate, batch_len):
 		pass

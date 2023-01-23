@@ -25,9 +25,16 @@ class ActivationLayer(Layer):
 		for input_id in self.inputs_id:
 			self.input = output_layers_dict[input_id+time]
 		output_nudge = nudge_layers_dict["d"+self.id+time]
-		nudge_layers_dict["d" + self.inputs_id+time] = self.derivative(output_layers_dict[self.id + time])*output_nudge
+
+		input_nudge = self.derivative(output_layers_dict[self.id + time])*output_nudge
+
+		key = "d" + self.inputs_id[0]+time
+		if key not in nudge_layers_dict.keys():
+			nudge_layers_dict[key] = input_nudge
+		else:
+			nudge_layers_dict[key] += input_nudge
 		self.input = None
 		return nudge_layers_dict
 
-	def nudge(self, nudge_layers_dict, learning_rate):
+	def nudge(self, nudge_layers_dict, learning_rate, batch_len):
 		pass

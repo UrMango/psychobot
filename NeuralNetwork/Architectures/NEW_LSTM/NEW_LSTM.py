@@ -82,7 +82,9 @@ class NEW_LSTM(Architecture):
 
     def reset_per_example(self):
         params_keys = ["dfrhw", "dirhw", "dcrhw", "dorhw", "dfrxw", "dirxw", "dcrxw", "dorxw", "dfrb", "dfrb", "dfrb", "dfrb", "dsrw", "dsrb"]
-        for key in self.nudge_layers_dict.keys():
+        keys = list(self.nudge_layers_dict.keys())
+        copy_keys = keys.copy()
+        for key in copy_keys:
             if key not in params_keys:
                 del self.nudge_layers_dict[key]
 
@@ -96,8 +98,14 @@ class NEW_LSTM(Architecture):
         self.output_layers_dict["h0"] = previous_hidden
         self.output_layers_dict["C0"] = previous_C
 
+        vector_sentence = []
         for t in range(len(sentence)):
-            self.output_layers_dict["x"+str(t+1)] = sentence[t]
+            vector_sentence.append(np.zeros((1, len(sentence[0])), dtype=np.float32))
+            for i in range(len(sentence[t])):
+                vector_sentence[t][0][i] = sentence[t][i]
+
+        for t in range(len(sentence)):
+            self.output_layers_dict["x"+str(t+1)] = vector_sentence[t]
 
         layers = ["fr", "ir", "cr", "or", "f", "i", "c", "o", "mfC", "mic", "C", "thC", "h"]
         for t in range(1, len(sentence)+1):
@@ -105,26 +113,26 @@ class NEW_LSTM(Architecture):
                 self.output_layers_dict = self.layers_dict[key].forward_propagation(self.output_layers_dict, t)
 
         # output cell
-        self.output_layers_dict = self.layers_dict["sr"].forward_propagation(self.output_layers_dict, -1)
-        self.output_layers_dict = self.layers_dict["s"].forward_propagation(self.output_layers_dict)
+        self.output_layers_dict = self.layers_dict["sr"].forward_propagation(self.output_layers_dict, len(sentence))
+        self.output_layers_dict = self.layers_dict["s"].forward_propagation(self.output_layers_dict, len(sentence))
 
         return self.output_layers_dict["s"]
 
     # backpropagation
     def backward_propagation(self, sentence, sentence_labels):
         loss, accuracy = 0, 0
-        self.nudge_layers_dict, loss, accuracy = self.layers_dict["s"].backward_propagation(self.nudge_layers_dict, self.output_layers_dict, sentence_labels)
+        self.nudge_layers_dict, loss, accuracy = self.layers_dict["s"].backward_propagation(self.nudge_layers_dict, self.output_layers_dict, sentence_labels, len(sentence))
         self.loss.append(loss)
         self.accuracy.append(accuracy)
-        self.nudge_layers_dict = self.layers_dict["s"].backward_propagation(self.nudge_layers_dict, self.output_layers_dict, -1)
+        self.nudge_layers_dict = self.layers_dict["sr"].backward_propagation(self.nudge_layers_dict, self.output_layers_dict, len(sentence))
         layers = ['h', 'thC', 'C', 'mic', 'mfC', 'o', 'c', 'i', 'f', 'or', 'cr', 'ir', 'fr']
         for t in range(len(sentence), 0, -1):
             for layer in layers:
                 self.nudge_layers_dict = self.layers_dict[layer].backward_propagation(self.nudge_layers_dict, self.output_layers_dict, t)
 
-    def update_parameters(self):
+    def update_parameters(self, size):
         for key in self.layers_dict.keys():
-            self.layers_dict[key].nudge(self.nudge_layers_dict, self.learning_rate)
+            self.layers_dict[key].nudge(self.nudge_layers_dict, self.learning_rate, size)
 
 
     def run_model(self, input_data):
@@ -177,19 +185,19 @@ class NEW_LSTM(Architecture):
         avg_acc = list()
         i = 0
         while i < len(self.loss):
-            avg_loss.append(np.mean(self.loss[i:i + 300]))
-            avg_acc.append(np.mean(self.accuracy[i:i + 300]))
-            i += 300
+            avg_loss.append(np.mean(self.loss[i:i + 600]))
+            avg_acc.append(np.mean(self.accuracy[i:i + 600]))
+            i += 600
 
         plt.plot(list(range(len(avg_loss))), avg_loss)
         plt.xlabel("x")
-        plt.ylabel("Loss (Avg of 30 batches)")
+        plt.ylabel("Loss (Avg of 600 examples)")
         plt.title("Loss Graph")
         plt.show()
 
         plt.plot(list(range(len(avg_acc))), avg_acc)
         plt.xlabel("x")
-        plt.ylabel("Accuracy (Avg of 30 batches)")
+        plt.ylabel("Accuracy (Avg of 600 examples)")
         plt.title("Accuracy Graph")
         plt.show()
 
@@ -209,6 +217,7 @@ class NEW_LSTM(Architecture):
                         continue
 
                     # forward propagation
+
                     softmax = self.forward_propagation(example[0])
 
                     self.backward_propagation(example[0], example[1])
@@ -224,11 +233,11 @@ class NEW_LSTM(Architecture):
                 avg_loss = avg_loss / len(batch)
                 avg_accuracy = avg_accuracy / len(batch)
 
-                print("For this batch")
+                print("For this epoch: "+str(i)+", batch: "+str(batch_i))
                 print("Loss: " + str(avg_loss))
                 print("Accuracy: " + str(avg_accuracy))
         print("If this number don't match you got a problem: " + str(len(self.loss)) + ", " + str(len(self.accuracy)))
 
         self.print_graph()
 
-        return self.parameters
+        return self.output_layers_dict

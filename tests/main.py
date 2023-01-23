@@ -120,15 +120,16 @@ def machine(answer, list_of_feelings, architecture):
 
         examples = separate_dataset_to_batches(examples[0], BATCHES)
         print("Hello! 😀 I'm PsychoBot.\nMy thing is sentiment analysis.\n")
-        if architecture.type == ArchitectureType.GRU:
-            ml.train(examples, EPOCHES) # need to separate between training examples and testing examples
-        else:
-            for batch in examples:
-                ml.train(batch, math.floor(0.9 * EXAMPLES))
-                count += 1
-                print('\r' + "Training 💪 - " + "{:.2f}".format(100 * (count / len(examples))) + "% | batch: " + str(
-                    count) + "/" + str(len(examples)), end="")
-        print("\rTraining 💪 was completed successfully!")
+        ml.train(examples, EPOCHES)
+        # if architecture.type == ArchitectureType.GRU:
+        #     ml.train(examples, EPOCHES) # need to separate between training examples and testing examples
+        # else:
+        #     for batch in examples:
+        #         ml.train(batch, math.floor(0.9 * EXAMPLES))
+        #         count += 1
+        #         print('\r' + "Training 💪 - " + "{:.2f}".format(100 * (count / len(examples))) + "% | batch: " + str(
+        #             count) + "/" + str(len(examples)), end="")
+        # print("\rTraining 💪 was completed successfully!")
         amount_true = 0
 
         # ["anger", "disgust", "fear", "joy", "sadness"]
