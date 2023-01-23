@@ -185,19 +185,19 @@ class NEW_LSTM(Architecture):
         avg_acc = list()
         i = 0
         while i < len(self.loss):
-            avg_loss.append(np.mean(self.loss[i:i + 600]))
-            avg_acc.append(np.mean(self.accuracy[i:i + 600]))
-            i += 600
+            avg_loss.append(np.mean(self.loss[i:i + 1000]))
+            avg_acc.append(np.mean(self.accuracy[i:i + 1000]))
+            i += 1000
 
         plt.plot(list(range(len(avg_loss))), avg_loss)
         plt.xlabel("x")
-        plt.ylabel("Loss (Avg of 600 examples)")
+        plt.ylabel("Loss (Avg of 1000 examples)")
         plt.title("Loss Graph")
         plt.show()
 
         plt.plot(list(range(len(avg_acc))), avg_acc)
         plt.xlabel("x")
-        plt.ylabel("Accuracy (Avg of 600 examples)")
+        plt.ylabel("Accuracy (Avg of 1000 examples)")
         plt.title("Accuracy Graph")
         plt.show()
 

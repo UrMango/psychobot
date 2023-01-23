@@ -11,7 +11,7 @@ class MiddleLayer(Layer):
 		self.inputs_id = _inputs_id
 		self.id = _id
 		self.weights = []
-		self.num_of_inputs = [] 
+		self.num_of_inputs = num_of_inputs
 		self.output_size = output_size
 		for i in range(num_of_inputs):
 			self.weights.append(np.random.normal(mean, std, (input_units[i], output_size)))
