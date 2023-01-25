@@ -1,14 +1,15 @@
 from NeuralNetwork.Utillities.Layer import Layer, LayerType
+from NeuralNetwork.Utillities.activation_functions import  Softmax
+
 import numpy as np
 
 class SoftmaxLayer(Layer):
-	def __init__(self, _function, _derivative, _id, _inputs_id):
+	def __init__(self, _id, _inputs_id):
 		super().__init__()
 		self.input = None
 		self.inputs_id = _inputs_id
 		self.outputs_id = None
-		self.function = _function
-		self.derivative = _derivative
+		self.function = Softmax.softmax
 		self.id = _id
 		self.type = LayerType.SOFTMAX
 
@@ -23,17 +24,20 @@ class SoftmaxLayer(Layer):
 
 	def backward_propagation(self, nudge_layers_dict, output_layers_dict, sentence_labels, t):
 		time = str(t)
-		loss = 0
 		accuracy = 0
 		for input_id in self.inputs_id:
 			self.input = output_layers_dict[input_id+time]
 		output = output_layers_dict[self.id]
-		output_error = np.zeros((1, len(output[0])), dtype=np.float32)
-		for i in range(len(sentence_labels)):
-			loss += -np.log(output[0][i])
-			if sentence_labels[i] == 1:  # check how to add this value to the vector
-				output_error[0][i] += self.derivative(output[0][i])  # output[i]-1
 
+		sentence_labels_vector = np.zeros((1, len(output[0])), dtype=np.float32)
+		for i in range(len(sentence_labels)):
+			sentence_labels_vector[0][i] = sentence_labels[i]
+
+		output_nudge = np.subtract(output, sentence_labels_vector)
+
+		log_soft_max = np.log(output)
+		loss_vec = np.multiply(log_soft_max, sentence_labels_vector)
+		loss = -np.sum(loss_vec)
 		true_feeling_index = 0
 		max_value = output[0][0]
 
@@ -46,9 +50,9 @@ class SoftmaxLayer(Layer):
 
 		key = "d" + self.inputs_id[0] + time
 		if key not in nudge_layers_dict.keys():
-			nudge_layers_dict[key] = output_error
+			nudge_layers_dict[key] = output_nudge
 		else:
-			nudge_layers_dict[key] += output_error
+			nudge_layers_dict[key] += output_nudge
 
 		self.input = None
 		return nudge_layers_dict, loss, accuracy
