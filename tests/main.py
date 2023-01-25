@@ -25,12 +25,13 @@ from gensim import downloader
 
 import re
 
-EPOCHES = 2
+EPOCHES = 10
 
 MIN_NUM = 0
 MAX_NUM = 0.25
 
 BATCHES = 300
+
 EXAMPLES = 30000
 
 nlp = spacy.load("en_core_web_sm")
@@ -164,40 +165,40 @@ def machine(answer, list_of_feelings, architecture):
         # surprise
     # neutral
     #
-    #     batchlen = 0
-    #     for batch in examples:
-    #         batchlen = len(batch) - math.floor(0.9 * EXAMPLES)
-    #         for example in batch[math.floor(0.9 * EXAMPLES):]:
-    #             ls = []
-    #             up_index = 0
-    #             for i in range(len(list_of_feelings)):
-    #                 ls.append(example[1][i])
-    #                 if i > 0:
-    #                     if ls[i] > ls[i - 1]:
-    #                         up_index = i
-    #
-    #             if check_input(example[0], ml, str(ls), list_of_feelings[up_index], up_index, list_of_feelings):
-    #                 amount_true += 1
+        testLen = 0
+        examples = examples[math.floor(0.3*BATCHES):]
+        for batch in examples:
+            for example in batch:
+                ls = []
+                up_index = 0
+                for i in range(len(list_of_feelings)):
+                    ls.append(example[1][i])
+                    if i > 0:
+                        if ls[i] > ls[i - 1]:
+                            up_index = i
+                if check_input(example[0], ml, str(ls), list_of_feelings[up_index], up_index, list_of_feelings):
+                    amount_true += 1
+                testLen += 1
 
-        # print(amount_true, EXAMPLES)
+        print(amount_true, EXAMPLES)
 
-        # for i in range(len(list_of_feelings)):
-        #     try:
-        #         print("Success for " + list_of_feelings[i] + ": " + str(
-        #             (100 * amount_true_feel[i]) / (amount_true_feel[i] + amount_false_feel[i])) + "%")
-        #     except Exception as e:
-        #         print("Success for " + list_of_feelings[i] + ": There was no such feeling")
-        #
-        #     try:
-        #         print("Inverse success for " + list_of_feelings[i] + ": " + str(
-        #             (100 * amount_true_feel[i]) / (amount_true_feel[i] + amount_false_feel_inv[i])) + "%")
-        #     except Exception as e:
-        #         print("Inverse success for " + list_of_feelings[i] + ": Didn't even guess ;)")
-        #     print()
+        for i in range(len(list_of_feelings)):
+            try:
+                print("Success for " + list_of_feelings[i] + ": " + str(
+                    (100 * amount_true_feel[i]) / (amount_true_feel[i] + amount_false_feel[i])) + "%")
+            except Exception as e:
+                print("Success for " + list_of_feelings[i] + ": There was no such feeling")
 
-        # print("General percents of success: " + str((100 * amount_true) / batchlen) + "%")
-        # print()
-        #return (100 * amount_true) / batchlen
+            try:
+                print("Inverse success for " + list_of_feelings[i] + ": " + str(
+                    (100 * amount_true_feel[i]) / (amount_true_feel[i] + amount_false_feel_inv[i])) + "%")
+            except Exception as e:
+                print("Inverse success for " + list_of_feelings[i] + ": Didn't even guess ;)")
+            print()
+
+        print("General percents of success: " + str((100 * amount_true) / testLen) + "%")
+        print()
+        return (100 * amount_true) / testLen
 
         return 0
 
