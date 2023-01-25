@@ -25,7 +25,7 @@ from gensim import downloader
 
 import re
 
-EPOCHES = 10
+EPOCHES = 15
 
 MIN_NUM = 0
 MAX_NUM = 0.25

@@ -3,17 +3,16 @@ import numpy as np
 
 
 class MiddleLayer(Layer):
-	def __init__(self, input_units, output_size, std,  _id, _nudges_id, _inputs_id, num_of_inputs):
+	def __init__(self, input_units, output_size, std,  _id, _inputs_id):
 		super().__init__()
 		mean = 0
 		self.input = None
-		self.nudges_id = _nudges_id
 		self.inputs_id = _inputs_id
 		self.id = _id
 		self.weights = []
-		self.num_of_inputs = num_of_inputs
+		self.num_of_inputs = len(input_units)
 		self.output_size = output_size
-		for i in range(num_of_inputs):
+		for i in range(self.num_of_inputs):
 			self.weights.append(np.random.normal(mean, std, (input_units[i], output_size)))
 		self.bias = np.random.normal(mean, std, (1, output_size))
 		self.type = LayerType.MIDDLE
@@ -61,21 +60,25 @@ class MiddleLayer(Layer):
 
 		for i in range(self.num_of_inputs):
 			key = None
-			if self.nudges_id[i][-1] == "-":
-				key = self.nudges_id[i][:-1] + str(t-1)
+			if self.inputs_id[i][-1] == "-":
+				key = "d" + self.inputs_id[i][:-1] + str(t-1)
 			else:
-				key = self.nudges_id[i] + time
+				key = "d" + self.inputs_id[i] + time
+
 			if key not in nudge_layers_dict.keys():
 				nudge_layers_dict[key] = input_nudge[i]
 			else:
 				nudge_layers_dict[key] += input_nudge[i]
 		for i in range(self.num_of_inputs):
-			key = self.nudges_id[i+self.num_of_inputs]
+			if self.inputs_id[i][-1] == "-":
+				key = "d" + self.id + self.inputs_id[i][:-1] + "w"
+			else:
+				key = "d" + self.id + self.inputs_id[i] + "w"
 			if key not in nudge_layers_dict.keys():
 				nudge_layers_dict[key] = weights_nudge[i]
 			else:
 				nudge_layers_dict[key] += weights_nudge[i]
-		key = self.nudges_id[2*self.num_of_inputs]
+		key = "d" + self.id + "b"
 		if key not in nudge_layers_dict.keys():
 			nudge_layers_dict[key] = bias_nudge
 		else:
@@ -85,6 +88,10 @@ class MiddleLayer(Layer):
 
 	def nudge(self, nudge_layers_dict, learning_rate, batch_len):
 		for i in range(self.num_of_inputs):
-			self.weights[i] -= nudge_layers_dict[self.nudges_id[i+self.num_of_inputs]] * learning_rate * (1/batch_len)
-		self.bias -= nudge_layers_dict[self.nudges_id[2*self.num_of_inputs]] * learning_rate * (1/batch_len)
+			if self.inputs_id[i][-1] == "-":
+				key = "d" + self.id + self.inputs_id[i][:-1] + "w"
+			else:
+				key = "d" + self.id + self.inputs_id[i] + "w"
+			self.weights[i] -= nudge_layers_dict[key] * learning_rate * (1/batch_len)
+		self.bias -= nudge_layers_dict["d" + self.id + "b"] * learning_rate * (1/batch_len)
 		return

@@ -58,10 +58,10 @@ class NEW_LSTM(Architecture):
         mean = 0
         # maybe add some kind of params that you can set from the start
 
-        self.layers_dict["fr"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std,  "fr", ["dh-", "dx", "dfrhw", "dfrxw", "dfrb"], ["h-", "x"],  2)
-        self.layers_dict["ir"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std,  "ir", ["dh-", "dx", "dirhw", "dirxw", "dfrb"], ["h-", "x"],  2)
-        self.layers_dict["cr"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std,  "cr", ["dh-", "dx", "dcrhw", "dcrxw", "dfrb"], ["h-", "x"],  2)
-        self.layers_dict["or"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std,  "or", ["dh-", "dx", "dorhw", "dorxw", "dfrb"], ["h-", "x"],  2)
+        self.layers_dict["fr"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std,  "fr", ["h-", "x"])
+        self.layers_dict["ir"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std,  "ir", ["h-", "x"])
+        self.layers_dict["cr"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std,  "cr", ["h-", "x"])
+        self.layers_dict["or"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std,  "or", ["h-", "x"])
 
         self.layers_dict["f"] = ActivationLayer(Sigmoid.sigmoid, Sigmoid.derivative_sigmoid_by_func, "f", ["fr"])
         self.layers_dict["i"] = ActivationLayer(Sigmoid.sigmoid, Sigmoid.derivative_sigmoid_by_func, "i", ["ir"])
@@ -77,11 +77,11 @@ class NEW_LSTM(Architecture):
 
         self.layers_dict["h"] = MultiplyLayer("h", ["o", "thC"])
 
-        self.layers_dict["sr"] = MiddleLayer([self.hidden_units], self.output_units, self.std,  "sr", ["dh", "dsrw", "dsrb"], ["h"], 1)
+        self.layers_dict["sr"] = MiddleLayer([self.hidden_units], self.output_units, self.std,  "sr", ["h"])
         self.layers_dict["s"] = SoftmaxLayer("s", ["sr"])
 
     def reset_per_example(self):
-        params_keys = ["dfrhw", "dirhw", "dcrhw", "dorhw", "dfrxw", "dirxw", "dcrxw", "dorxw", "dfrb", "dfrb", "dfrb", "dfrb", "dsrw", "dsrb"]
+        params_keys = ["dfrhw", "dirhw", "dcrhw", "dorhw", "dfrxw", "dirxw", "dcrxw", "dorxw", "dfrb", "dirb", "dcrb", "dorb", "dsrhw", "dsrb"]
         keys = list(self.nudge_layers_dict.keys())
         copy_keys = keys.copy()
         for key in copy_keys:
@@ -117,7 +117,7 @@ class NEW_LSTM(Architecture):
         self.output_layers_dict = self.layers_dict["sr"].forward_propagation(self.output_layers_dict, time)
         self.output_layers_dict = self.layers_dict["s"].forward_propagation(self.output_layers_dict, time)
 
-        return self.output_layers_dict["s"]
+        return self.output_layers_dict["s"][0]
 
     # backpropagation
     def backward_propagation(self, sentence, sentence_labels):
@@ -185,19 +185,21 @@ class NEW_LSTM(Architecture):
         avg_acc = list()
         i = 0
         while i < len(self.loss):
-            avg_loss.append(np.mean(self.loss[i:i + 3000]))
-            avg_acc.append(np.mean(self.accuracy[i:i + 3000]))
-            i += 3000
+            avg_loss.append(np.mean(self.loss[i:i + 1000]))
+            avg_acc.append(np.mean(self.accuracy[i:i + 1000]))
+            i += 1000
 
+        plt1 = plt.figure(1)
         plt.plot(list(range(len(avg_loss))), avg_loss)
         plt.xlabel("x")
-        plt.ylabel("Loss (Avg of 3000 examples)")
+        plt.ylabel("Loss (Avg of 1000 examples)")
         plt.title("Loss Graph")
         plt.show()
 
+        plt2 = plt.figure(2)
         plt.plot(list(range(len(avg_acc))), avg_acc)
         plt.xlabel("x")
-        plt.ylabel("Accuracy (Avg of 3000 examples)")
+        plt.ylabel("Accuracy (Avg of 1000 examples)")
         plt.title("Accuracy Graph")
         plt.show()
 
@@ -208,13 +210,14 @@ class NEW_LSTM(Architecture):
             avg_loss.append(np.mean(self.loss[i:i + 30000]))
             avg_acc.append(np.mean(self.accuracy[i:i + 30000]))
             i += 30000
-
+        plt3 = plt.figure(3)
         plt.plot(list(range(len(avg_loss))), avg_loss)
         plt.xlabel("x")
         plt.ylabel("Loss (Avg of 30000 examples)")
         plt.title("Loss Graph")
         plt.show()
 
+        plt4 = plt.figure(4)
         plt.plot(list(range(len(avg_acc))), avg_acc)
         plt.xlabel("x")
         plt.ylabel("Accuracy (Avg of 30000 examples)")
