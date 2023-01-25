@@ -78,7 +78,7 @@ class NEW_LSTM(Architecture):
         self.layers_dict["h"] = MultiplyLayer("h", ["o", "thC"])
 
         self.layers_dict["sr"] = MiddleLayer([self.hidden_units], self.output_units, self.std,  "sr", ["dh", "dsrw", "dsrb"], ["h"], 1)
-        self.layers_dict["s"] = SoftmaxLayer(Softmax.softmax, Softmax.derivative_softmax_and_log_by_func, "s", ["sr"])
+        self.layers_dict["s"] = SoftmaxLayer("s", ["sr"])
 
     def reset_per_example(self):
         params_keys = ["dfrhw", "dirhw", "dcrhw", "dorhw", "dfrxw", "dirxw", "dcrxw", "dorxw", "dfrb", "dfrb", "dfrb", "dfrb", "dsrw", "dsrb"]
@@ -136,7 +136,7 @@ class NEW_LSTM(Architecture):
             self.layers_dict[key].nudge(self.nudge_layers_dict, self.learning_rate, size)
 
     def run_model(self, input_data):
-        hidden_cache, output, softmax = self.forward_propagation(input_data)
+        output = self.forward_propagation(input_data)
 
         return output
 
@@ -185,19 +185,39 @@ class NEW_LSTM(Architecture):
         avg_acc = list()
         i = 0
         while i < len(self.loss):
-            avg_loss.append(np.mean(self.loss[i:i + 1000]))
-            avg_acc.append(np.mean(self.accuracy[i:i + 1000]))
-            i += 1000
+            avg_loss.append(np.mean(self.loss[i:i + 3000]))
+            avg_acc.append(np.mean(self.accuracy[i:i + 3000]))
+            i += 3000
 
         plt.plot(list(range(len(avg_loss))), avg_loss)
         plt.xlabel("x")
-        plt.ylabel("Loss (Avg of 1000 examples)")
+        plt.ylabel("Loss (Avg of 3000 examples)")
         plt.title("Loss Graph")
         plt.show()
 
         plt.plot(list(range(len(avg_acc))), avg_acc)
         plt.xlabel("x")
-        plt.ylabel("Accuracy (Avg of 1000 examples)")
+        plt.ylabel("Accuracy (Avg of 3000 examples)")
+        plt.title("Accuracy Graph")
+        plt.show()
+
+        avg_loss = []
+        avg_acc = []
+        i = 0
+        while i < len(self.loss):
+            avg_loss.append(np.mean(self.loss[i:i + 30000]))
+            avg_acc.append(np.mean(self.accuracy[i:i + 30000]))
+            i += 30000
+
+        plt.plot(list(range(len(avg_loss))), avg_loss)
+        plt.xlabel("x")
+        plt.ylabel("Loss (Avg of 30000 examples)")
+        plt.title("Loss Graph")
+        plt.show()
+
+        plt.plot(list(range(len(avg_acc))), avg_acc)
+        plt.xlabel("x")
+        plt.ylabel("Accuracy (Avg of 30000 examples)")
         plt.title("Accuracy Graph")
         plt.show()
 
@@ -207,9 +227,6 @@ class NEW_LSTM(Architecture):
             batch_i = -1
             for batch in train_dataset:
                 batch_i += 1
-                print()
-                print("Number of Epochs: " + str(i))
-                print("Number of Batch: " + str(batch_i))
                 example_k = -1
                 for example in batch:
                     example_k += 1
@@ -225,19 +242,19 @@ class NEW_LSTM(Architecture):
                 self.update_parameters(len(batch))
                 self.reset_per_nudge()
 
-                avg_loss = 0
-                avg_accuracy = 0
-                for j in range(len(self.loss) - len(batch), len(self.loss)):
-                    avg_loss += self.loss[j]
-                    avg_accuracy += self.accuracy[j]
-                avg_loss = avg_loss / len(batch)
-                avg_accuracy = avg_accuracy / len(batch)
-
-                print("For this epoch: "+str(i)+", batch: "+str(batch_i))
-                print("Loss: " + str(avg_loss))
-                print("Accuracy: " + str(avg_accuracy))
+                #avg_loss = 0
+                #avg_accuracy = 0
+                #for j in range(len(self.loss) - len(batch), len(self.loss)):
+                #    avg_loss += self.loss[j]
+                #    avg_accuracy += self.accuracy[j]
+                #avg_loss = avg_loss / len(batch)
+                #avg_accuracy = avg_accuracy / len(batch)
+                print('\r' + "Training 💪 - " + "{:.2f}".format(100 * (batch_i+len(train_dataset)*i)/(epochs*len(train_dataset))) + "% | batch: " + str(batch_i+len(train_dataset)*i) + "/" + str(epochs*len(train_dataset)), end="")
+                #print("Loss: " + str(avg_loss))
+                #print("Accuracy: " + str(avg_accuracy))
         print("If this number don't match you got a problem: " + str(len(self.loss)) + ", " + str(len(self.accuracy)))
 
+        print()
         self.print_graph()
 
         return self.output_layers_dict
