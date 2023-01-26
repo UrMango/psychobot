@@ -122,7 +122,7 @@ def machine(answer, list_of_feelings, architecture):
         examples = separate_dataset_to_batches(examples[0], BATCHES)
         print("Hello! 😀 I'm PsychoBot.\nMy thing is sentiment analysis.\n")
         ml.train(examples, EPOCHES)
-        # if architecture.type == ArchitectureType.GRU:
+        # if architecture.type == ArchitectureType.OldGRU:
         #     ml.train(examples, EPOCHES) # need to separate between training examples and testing examples
         # else:
         #     for batch in examples:
@@ -300,7 +300,7 @@ def main():
     choice = 0
     ml = None
     while choice != 3:
-        print("The battle for the Throne of AI awaits, LSTM or GRU, which memory will you choose to lead your army?")
+        print("The battle for the Throne of AI awaits, LSTM or OldGRU, which memory will you choose to lead your army?")
         arch = input()
         print(
             "1 - Train the machine on prepared dataset\n2 - Train the machine on un-prepared dataset\n3 - Use working machine\n4 - I've seen enough")

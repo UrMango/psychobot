@@ -6,8 +6,8 @@ from NeuralNetwork.Utillities.MultiplyLayer import MultiplyLayer
 from NeuralNetwork.Utillities.AddLayer import AddLayer
 from NeuralNetwork.Utillities.SoftmaxLayer import SoftmaxLayer
 from NeuralNetwork.Utillities.activation_functions import Sigmoid, Tanh, Softmax
-from NeuralNetwork.Architectures.GRU.OutputCell import OutputCell
-from NeuralNetwork.Architectures.GRU.Cell import Cell
+from NeuralNetwork.Architectures.OldGRU.OutputCell import OutputCell
+from NeuralNetwork.Architectures.OldGRU.Cell import Cell
 import pandas as pd
 from gensim import models, similarities, downloader
 import logging

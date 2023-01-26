@@ -11,8 +11,8 @@ EXACT_PATH = r'hadera-801-psychobot\Dataset\final_dataset.csv'
 
 
 class Dataset:
-    #path = r'E:\GitHub'
-    path = r'C:\Users\magshimim\Documents\Magshimim\Psychobot'
+    path = r'E:\GitHub'
+    #path = r'C:\Users\magshimim\Documents\Magshimim\Psychobot'
 
     df = pd.read_csv(path + "\\" + EXACT_PATH)
 
