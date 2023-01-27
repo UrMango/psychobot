@@ -22,7 +22,7 @@ from gensim import downloader
 
 import re
 
-EPOCHS = 10
+EPOCHS = 15
 
 NUMBER_OF_EXAMPLES_IN_BATCH = 100
 
@@ -48,13 +48,14 @@ class NpEncoder(json.JSONEncoder):
 
 
 def machine_with_params(list_of_feelings):
-    learning_rates = [0.01, 1]
+    learning_rates = [1, 0.01]
     batch_sizes = [30, 60, 100, 200]
     hidden_units = [512, 400, 300, 256, 128]
 
     rates = []
     sizes = []
     units = []
+    dict_params = {}
 
     # for rate in learning_rates:
     #     print('\n↓↓↓  LEARNING RATE: ' + str(rate) + ' ↓↓↓')
@@ -67,18 +68,20 @@ def machine_with_params(list_of_feelings):
         print('\n↓↓↓  LEARNING RATE: ' + str(rate) + ' ↓↓↓')
         for size in batch_sizes:
             print('\n↓↓↓ SIZES: ' + str(size) + ' ↓↓↓')
-            sizes.append(
-                {"size": size, "precents": machine(False, list_of_feelings, GRU(list_of_feelings, learning_rate=rate), batch_size=size)})
-        print("\nTOTAL SIZES PERCENTS")
-        for size in sizes:
-            print("size: " + str(size["size"]) + " - " + str(size["precents"]) + "%")
+            accuracy_test = machine(False, list_of_feelings, GRU(list_of_feelings, learning_rate=rate), batch_size=size)
+            for i in range(EPOCHS):
+                dict_params["batch size: "+str(size)+", learning rate: "+str(rate)+", epoch: "+str(i)+" - "] = 100*accuracy_test[i]
+                print("batch size: "+str(size)+", learning rate: "+str(rate)+", epoch: "+str(i)+" - " + str(100*accuracy_test[i]) + "%")
+        print("\nTOTAL PERCENTS")
+        for key in dict_params.keys():
+            print(key + str(dict_params[key]) + "%")
 
-    for unit in hidden_units:
-       print('\n↓↓↓ HIDDEN_UNITS: ' + str(unit) + ' ↓↓↓')
-       units.append({"unit": unit, "precents": machine(False, list_of_feelings, GRU(list_of_feelings, hidden_units=unit))})
-    print("\nTOTAL HIDDEN UNITS PRECENTS:")
-    for unit in units:
-        print("unit: " + str(unit["unit"]) + " - " + str(unit["precents"]) + "%")
+    # for unit in hidden_units:
+    #    print('\n↓↓↓ HIDDEN_UNITS: ' + str(unit) + ' ↓↓↓')
+    #    units.append({"unit": unit, "precents": machine(False, list_of_feelings, GRU(list_of_feelings, hidden_units=unit))})
+    # print("\nTOTAL HIDDEN UNITS PRECENTS:")
+    # for unit in units:
+    #     print("unit: " + str(unit["unit"]) + " - " + str(unit["precents"]) + "%")
 
 def separate_dataset_to_batches(dataset, batch_size):
     batches = []
@@ -105,7 +108,7 @@ def machine(answer, list_of_feelings, architecture, batch_size=100):
         print("Hello! 😀 I'm PsychoBot.\nMy thing is sentiment analysis.\n")
 
         accuracy_test = ml.train(examples[:int(len(examples) * TRAINING_SET_PERCENTAGE)], examples[int(len(examples) * TRAINING_SET_PERCENTAGE):], EPOCHS)
-        return 100*accuracy_test[-1]
+        return accuracy_test
 
         # ["anger", "disgust", "fear", "joy", "sadness"]
         # anger, disgust, fear, joy, sadness

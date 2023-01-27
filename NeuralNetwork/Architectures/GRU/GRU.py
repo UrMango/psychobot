@@ -223,47 +223,47 @@ class GRU(Architecture):
         avg_loss = list()
         avg_acc = list()
         i = 0
-        while i < len(self.loss):
-            avg_loss.append(np.mean(self.loss[i:i + 10*examples]))
-            avg_acc.append(np.mean(self.accuracy[i:i + 10*examples]))
-            i += 10*examples
+        # while i < len(self.loss):
+        #     avg_loss.append(np.mean(self.loss[i:i + 10*examples]))
+        #     avg_acc.append(np.mean(self.accuracy[i:i + 10*examples]))
+        #     i += 10*examples
+        #
+        # plt1 = plt.figure(1)
+        # plt.plot(list(range(len(avg_loss))), avg_loss)
+        # plt.xlabel("x")
+        # plt.ylabel("Loss (Avg of 10 batches)")
+        # plt.title("Loss Graph Per Batch, learning rate: "+str(self.learning_rate)+" batch_size: "+str(examples))
+        # plt.show()
+        #
+        # plt2 = plt.figure(2)
+        # plt.plot(list(range(len(avg_acc))), avg_acc)
+        # plt.xlabel("x")
+        # plt.ylabel("Accuracy (Avg of 10 batches)")
+        # plt.title("Accuracy Graph Per Batch, learning rate: "+str(self.learning_rate)+" batch_size: "+str(examples))
+        # plt.show()
+        #
+        # avg_loss = []
+        # avg_acc = []
+        # i = 0
+        # while i < len(self.loss):
+        #     avg_loss.append(np.mean(self.loss[i:i + epochs]))
+        #     avg_acc.append(np.mean(self.accuracy[i:i + epochs]))
+        #     i += epochs
+        # plt3 = plt.figure(3)
+        # plt.plot(list(range(len(avg_loss))), avg_loss)
+        # plt.xlabel("x")
+        # plt.ylabel("Loss (Avg of epoch)")
+        # plt.title("Loss Graph Per Epoch, learning rate: "+str(self.learning_rate)+" batch_size: "+str(examples))
+        # plt.show()
+        #
+        # plt4 = plt.figure(4)
+        # plt.plot(list(range(len(avg_acc))), avg_acc)
+        # plt.xlabel("x")
+        # plt.ylabel("Accuracy (Avg of epoch)")
+        # plt.title("Accuracy Graph Per Epoch, learning rate: "+str(self.learning_rate)+" batch_size: "+str(examples))
+        # plt.show()
 
-        plt1 = plt.figure(1)
-        plt.plot(list(range(len(avg_loss))), avg_loss)
-        plt.xlabel("x")
-        plt.ylabel("Loss (Avg of 10 batches)")
-        plt.title("Loss Graph Per Batch, learning rate: "+str(self.learning_rate)+" batch_size: "+str(examples))
-        plt.show()
-
-        plt2 = plt.figure(2)
-        plt.plot(list(range(len(avg_acc))), avg_acc)
-        plt.xlabel("x")
-        plt.ylabel("Accuracy (Avg of 10 batches)")
-        plt.title("Accuracy Graph Per Batch, learning rate: "+str(self.learning_rate)+" batch_size: "+str(examples))
-        plt.show()
-
-        avg_loss = []
-        avg_acc = []
-        i = 0
-        while i < len(self.loss):
-            avg_loss.append(np.mean(self.loss[i:i + epochs]))
-            avg_acc.append(np.mean(self.accuracy[i:i + epochs]))
-            i += epochs
-        plt3 = plt.figure(3)
-        plt.plot(list(range(len(avg_loss))), avg_loss)
-        plt.xlabel("x")
-        plt.ylabel("Loss (Avg of epoch)")
-        plt.title("Loss Graph Per Epoch, learning rate: "+str(self.learning_rate)+" batch_size: "+str(examples))
-        plt.show()
-
-        plt4 = plt.figure(4)
-        plt.plot(list(range(len(avg_acc))), avg_acc)
-        plt.xlabel("x")
-        plt.ylabel("Accuracy (Avg of epoch)")
-        plt.title("Accuracy Graph Per Epoch, learning rate: "+str(self.learning_rate)+" batch_size: "+str(examples))
-        plt.show()
-
-        plt5 = plt.figure(5)
+        plt5 = plt.figure(1)
         plt.plot(list(range(len(avg_acc))), avg_acc)
         plt.xlabel("x")
         plt.ylabel("Accuracy (Avg of epoch)")

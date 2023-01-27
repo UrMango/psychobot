@@ -16,8 +16,8 @@ class NeuralNetwork:
     def run_model_with_embedding(self, input_string):
         return self.architecture.run_model_with_embedding(input_string)
 
-    def train(self, examples, iters):
-        self.architecture.train(examples, iters)
+    def train(self, training_examples, test_examples, iters):
+        self.architecture.train(training_examples, test_examples, iters)
 
     def average_cost(self, examples):
         costs = []
