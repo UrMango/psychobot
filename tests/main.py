@@ -31,6 +31,7 @@ MIN_NUM = 0
 MAX_NUM = 0.25
 
 BATCHES = 300
+NUMBER_OF_EXAMPLES_IN_BATCH = 100
 
 EXAMPLES = 30000
 
@@ -58,46 +59,46 @@ class NpEncoder(json.JSONEncoder):
 
 
 def machine_with_params(list_of_feelings):
-    learning_rates = [ 0.001, 0.0008, 0.0005,0.0001,0.00005]
-    hidden_units = [512,400, 300, 256, 128]
-    std_units = [0.2, 0.1, 0.05, 0.01, 0.05, 0.001, 0.005]
+    learning_rates = [1, 0.1, 0.01,0.001]
+    batch_sizes = [30, 60, 100, 200, 400]
+    hidden_units = [512, 400, 300, 256, 128]
 
     rates = []
+    sizes = []
     units = []
-    stds = []
 
-    for rate in learning_rates:
-        print('\n↓↓↓  LEARNING RATE: ' + str(rate) + ' ↓↓↓')
-        rates.append({"rate": rate, "precents": machine(False, list_of_feelings, learning_rate=rate)})
+    # for rate in learning_rates:
+    #     print('\n↓↓↓  LEARNING RATE: ' + str(rate) + ' ↓↓↓')
+    #     rates.append({"rate": rate, "precents": machine(False, list_of_feelings, GRU(list_of_feelings, learning_rate=rate))})
+    # print("\nTOTAL RATE PRECENTS:")
+    # for rate in rates:
+    #     print("rate: " + str(rate["rate"]) + " - " + str(rate["precents"]) + "%")
+    #
+    for size in batch_sizes:
+        print('\n↓↓↓ SIZES: ' + str(size) + ' ↓↓↓')
+        sizes.append(
+            {"size": size, "precents": machine(False, list_of_feelings, GRU(list_of_feelings), batch_size=size)})
+    print("\nTOTAL SIZES PERCENTS")
+    for size in sizes:
+        print("size: " + str(size["size"]) + " - " + str(size["precents"]) + "%")
 
     for unit in hidden_units:
-        print('\n↓↓↓ HIDDEN_UNITS: ' + str(unit) + ' ↓↓↓')
-        units.append({"unit": unit, "precents": machine(False, list_of_feelings, hidden_units=unit)})
-
-    #for std in std_units:
-    #    print('\n↓↓↓ STD: ' + str(std) + ' ↓↓↓')
-    #    stds.append({"std": std, "precents": machine(False, list_of_feelings, std=std)})
-
-    print("\nTOTAL RATE PRECENTS:")
-    for rate in rates:
-        print("rate: " + str(rate["rate"]) + " - " + str(rate["precents"]) + "%")
+       print('\n↓↓↓ HIDDEN_UNITS: ' + str(unit) + ' ↓↓↓')
+       units.append({"unit": unit, "precents": machine(False, list_of_feelings, GRU(list_of_feelings, hidden_units=unit))})
     print("\nTOTAL HIDDEN UNITS PRECENTS:")
     for unit in units:
         print("unit: " + str(unit["unit"]) + " - " + str(unit["precents"]) + "%")
-    print("\nTOTAL STD PERCENTS")
-    for std in std_units:
-        print("std: " + str(std["std"]) + " - " + str(std["precents"]) + "%")
 
 
-def separate_dataset_to_batches(dataset, n_batches):
+
+def separate_dataset_to_batches(dataset, batch_size):
     batches = []
-    batch_size = len(dataset) // n_batches
     for i in range(0, len(dataset), batch_size):
         batches.append(dataset[i:i + batch_size])
     return batches
 
 
-def machine(answer, list_of_feelings, architecture):
+def machine(answer, list_of_feelings, architecture, batch_size=100):
     ml = NeuralNetwork(architecture)
 
     while True:
@@ -119,9 +120,9 @@ def machine(answer, list_of_feelings, architecture):
         batchlen = 0
         amount_true = 0
 
-        examples = separate_dataset_to_batches(examples[0], BATCHES)
+        examples = separate_dataset_to_batches(examples[0], batch_size)
         print("Hello! 😀 I'm PsychoBot.\nMy thing is sentiment analysis.\n")
-        ml.train(examples, EPOCHES)
+        ml.train(examples[:int(len(examples) * 0.8)], EPOCHES)
         # if architecture.type == ArchitectureType.OldGRU:
         #     ml.train(examples, EPOCHES) # need to separate between training examples and testing examples
         # else:
@@ -166,7 +167,7 @@ def machine(answer, list_of_feelings, architecture):
     # neutral
     #
         testLen = 0
-        examples = examples[math.floor(0.3*BATCHES):]
+        examples = examples[int(len(examples) * 0.8):]
         for batch in examples:
             for example in batch:
                 ls = []

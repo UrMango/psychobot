@@ -28,7 +28,7 @@ beta2 = 0.99
 
 class GRU(Architecture):
     # Constructor
-    def __init__(self, list_of_feelings, hidden_units=256, learning_rate=0.001, std=0.01, embed=False):
+    def __init__(self, list_of_feelings, hidden_units=256, learning_rate=1, std=0.01, embed=False):
         super().__init__(ArchitectureType.NEW_LSTM)
 
         self.loss = []
@@ -241,16 +241,16 @@ class GRU(Architecture):
                 self.update_parameters(len(batch))
                 self.reset_per_nudge()
 
-                #avg_loss = 0
-                #avg_accuracy = 0
-                #for j in range(len(self.loss) - len(batch), len(self.loss)):
+                # avg_loss = 0
+                # avg_accuracy = 0
+                # for j in range(len(self.loss) - len(batch), len(self.loss)):
                 #    avg_loss += self.loss[j]
                 #    avg_accuracy += self.accuracy[j]
-                #avg_loss = avg_loss / len(batch)
-                #avg_accuracy = avg_accuracy / len(batch)
-                print('\r' + "Training 💪 - " + "{:.2f}".format(100 * (batch_i+len(train_dataset)*i)/(epochs*len(train_dataset))) + "% | batch: " + str(batch_i+len(train_dataset)*i) + "/" + str(epochs*len(train_dataset)), end="")
-                #print("Loss: " + str(avg_loss))
-                #print("Accuracy: " + str(avg_accuracy))
+                # avg_loss = avg_loss / len(batch)
+                # avg_accuracy = avg_accuracy / len(batch)
+                print('\r' + "Training 💪 - " + "{:.2f}".format(100 * (1+batch_i+len(train_dataset)*i)/(epochs*len(train_dataset))) + "% | batch: " + str(1+batch_i+len(train_dataset)*i) + "/" + str(epochs*len(train_dataset)), end="")
+                # print("Loss: " + str(avg_loss))
+                # print("Accuracy: " + str(avg_accuracy))
         print("If this number don't match you got a problem: " + str(len(self.loss)) + ", " + str(len(self.accuracy)))
 
         print()
