@@ -28,7 +28,7 @@ beta2 = 0.99
 
 class GRU(Architecture):
     # Constructor
-    def __init__(self, list_of_feelings, hidden_units=256, learning_rate=1, std=0.01):
+    def __init__(self, list_of_feelings, hidden_units=256, learning_rate=1, std=0.01, embed=False):
         super().__init__(ArchitectureType.NEW_LSTM)
 
         self.loss = []
@@ -57,6 +57,9 @@ class GRU(Architecture):
         self.layers_dict = {}
         logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
         self.initialize_layers()
+        if embed:
+            self.nlp = spacy.load("en_core_web_sm")
+            self.model = downloader.load('glove-twitter-25')
 
     def initialize_layers(self):
         mean = 0
@@ -219,7 +222,7 @@ class GRU(Architecture):
             dict[emotion] = res[i]
         return self.list_of_feelings[highest[1]], dict
 
-    def print_graph(self, epochs, examples):
+    def print_graph(self, epochs, examples, accuracy_test):
         avg_loss = list()
         avg_acc = list()
         i = 0
@@ -263,6 +266,7 @@ class GRU(Architecture):
         # plt.title("Accuracy Graph Per Epoch, learning rate: "+str(self.learning_rate)+" batch_size: "+str(examples))
         # plt.show()
 
+        avg_loss = accuracy_test
         plt5 = plt.figure(1)
         plt.plot(list(range(len(avg_acc))), avg_acc)
         plt.xlabel("x")
