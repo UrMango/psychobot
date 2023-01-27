@@ -28,7 +28,7 @@ beta2 = 0.99
 
 class GRU(Architecture):
     # Constructor
-    def __init__(self, list_of_feelings, hidden_units=256, learning_rate=1, std=0.01, embed=False):
+    def __init__(self, list_of_feelings, hidden_units=256, learning_rate=1, std=0.01):
         super().__init__(ArchitectureType.NEW_LSTM)
 
         self.loss = []
@@ -40,16 +40,23 @@ class GRU(Architecture):
         self.list_of_feelings = list_of_feelings
         self.hidden_units = hidden_units
         self.learning_rate = learning_rate
+        self.accuracy_test = []
+
 
         self.output_layers_dict = {}
         self.nudge_layers_dict = {}
 
+        self.amount_true_feel = []
+        self.amount_false_feel = []
+        self.amount_false_feel_inv = []
+        for feel in list_of_feelings:
+            self.amount_true_feel.append(0)
+            self.amount_false_feel.append(0)
+            self.amount_false_feel_inv.append(0)
+
         self.layers_dict = {}
         logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
         self.initialize_layers()
-        if embed:
-            self.nlp = spacy.load("en_core_web_sm")
-            self.model = downloader.load('glove-twitter-25')
 
     def initialize_layers(self):
         mean = 0
@@ -136,6 +143,42 @@ class GRU(Architecture):
 
         return output
 
+    def test(self, examples):
+        test_len = 0
+        amount_true = 0
+        for batch in examples:
+            for example in batch:
+                ls = []
+                up_index = 0
+                for i in range(len(self.list_of_feelings)):
+                    ls.append(example[1][i])
+                    if i > 0:
+                        if ls[i] > ls[i - 1]:
+                            up_index = i
+                if self.check_input(example[0], self.list_of_feelings[up_index], up_index, self.list_of_feelings):
+                    amount_true += 1
+                test_len += 1
+        return amount_true / test_len
+    def check_input(self, input_data, expected_feeling, expected_feeling_index, list_of_feelings):
+        return_val = False
+
+        res = self.run_model(input_data)
+        highest = [0, 0]
+
+        for i in range(len(res)):
+            if res[i] > highest[0]:
+                highest[0] = res[i]
+                highest[1] = i
+
+        if str(list_of_feelings[highest[1]]) == str(expected_feeling):
+            self.amount_true_feel[highest[1]] += 1
+            return_val = True
+        else:
+            self.amount_false_feel_inv[highest[1]] += 1
+            self.amount_false_feel[expected_feeling_index] += 1
+
+        return return_val
+
     def run_model_with_embedding(self, input_string):
         regex = re.compile(r'[^a-zA-Z\s]')
         text = regex.sub('', input_string)
@@ -176,52 +219,59 @@ class GRU(Architecture):
             dict[emotion] = res[i]
         return self.list_of_feelings[highest[1]], dict
 
-    def print_graph(self):
+    def print_graph(self, epochs, examples):
         avg_loss = list()
         avg_acc = list()
         i = 0
         while i < len(self.loss):
-            avg_loss.append(np.mean(self.loss[i:i + 1000]))
-            avg_acc.append(np.mean(self.accuracy[i:i + 1000]))
-            i += 1000
+            avg_loss.append(np.mean(self.loss[i:i + 10*examples]))
+            avg_acc.append(np.mean(self.accuracy[i:i + 10*examples]))
+            i += 10*examples
 
         plt1 = plt.figure(1)
         plt.plot(list(range(len(avg_loss))), avg_loss)
         plt.xlabel("x")
-        plt.ylabel("Loss (Avg of 1000 examples)")
-        plt.title("Loss Graph")
+        plt.ylabel("Loss (Avg of 10 batches)")
+        plt.title("Loss Graph Per Batch, learning rate: "+str(self.learning_rate)+" batch_size: "+str(examples))
         plt.show()
 
         plt2 = plt.figure(2)
         plt.plot(list(range(len(avg_acc))), avg_acc)
         plt.xlabel("x")
-        plt.ylabel("Accuracy (Avg of 1000 examples)")
-        plt.title("Accuracy Graph")
+        plt.ylabel("Accuracy (Avg of 10 batches)")
+        plt.title("Accuracy Graph Per Batch, learning rate: "+str(self.learning_rate)+" batch_size: "+str(examples))
         plt.show()
 
         avg_loss = []
         avg_acc = []
         i = 0
         while i < len(self.loss):
-            avg_loss.append(np.mean(self.loss[i:i + 30000]))
-            avg_acc.append(np.mean(self.accuracy[i:i + 30000]))
-            i += 30000
+            avg_loss.append(np.mean(self.loss[i:i + epochs]))
+            avg_acc.append(np.mean(self.accuracy[i:i + epochs]))
+            i += epochs
         plt3 = plt.figure(3)
         plt.plot(list(range(len(avg_loss))), avg_loss)
         plt.xlabel("x")
-        plt.ylabel("Loss (Avg of 30000 examples)")
-        plt.title("Loss Graph")
+        plt.ylabel("Loss (Avg of epoch)")
+        plt.title("Loss Graph Per Epoch, learning rate: "+str(self.learning_rate)+" batch_size: "+str(examples))
         plt.show()
 
         plt4 = plt.figure(4)
         plt.plot(list(range(len(avg_acc))), avg_acc)
         plt.xlabel("x")
-        plt.ylabel("Accuracy (Avg of 30000 examples)")
-        plt.title("Accuracy Graph")
+        plt.ylabel("Accuracy (Avg of epoch)")
+        plt.title("Accuracy Graph Per Epoch, learning rate: "+str(self.learning_rate)+" batch_size: "+str(examples))
+        plt.show()
+
+        plt5 = plt.figure(5)
+        plt.plot(list(range(len(avg_acc))), avg_acc)
+        plt.xlabel("x")
+        plt.ylabel("Accuracy (Avg of epoch)")
+        plt.title("Accuracy On Test Data, learning rate: " + str(self.learning_rate) + " batch_size: " + str(examples))
         plt.show()
 
     # train function
-    def train(self, train_dataset, epochs):
+    def train(self, train_dataset, test_dataset, epochs):
         for i in range(epochs):
             batch_i = -1
             for batch in train_dataset:
@@ -241,19 +291,11 @@ class GRU(Architecture):
                 self.update_parameters(len(batch))
                 self.reset_per_nudge()
 
-                # avg_loss = 0
-                # avg_accuracy = 0
-                # for j in range(len(self.loss) - len(batch), len(self.loss)):
-                #    avg_loss += self.loss[j]
-                #    avg_accuracy += self.accuracy[j]
-                # avg_loss = avg_loss / len(batch)
-                # avg_accuracy = avg_accuracy / len(batch)
                 print('\r' + "Training 💪 - " + "{:.2f}".format(100 * (1+batch_i+len(train_dataset)*i)/(epochs*len(train_dataset))) + "% | batch: " + str(1+batch_i+len(train_dataset)*i) + "/" + str(epochs*len(train_dataset)), end="")
-                # print("Loss: " + str(avg_loss))
-                # print("Accuracy: " + str(avg_accuracy))
+            self.accuracy_test.append(self.test(test_dataset))
         print("If this number don't match you got a problem: " + str(len(self.loss)) + ", " + str(len(self.accuracy)))
 
         print()
-        self.print_graph()
+        self.print_graph(epochs, len(train_dataset[0]), self.accuracy_test)
 
-        return self.output_layers_dict
+        return self.accuracy_test
