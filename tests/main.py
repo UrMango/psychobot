@@ -22,7 +22,7 @@ from gensim import downloader
 
 import re
 
-EPOCHS = 20
+EPOCHS = 13
 
 NUMBER_OF_EXAMPLES_IN_BATCH = 100
 
@@ -90,7 +90,7 @@ def separate_dataset_to_batches(dataset, batch_size):
     return batches
 
 
-def machine(answer, list_of_feelings, architecture, batch_size=100):
+def machine(answer, list_of_feelings, architecture, batch_size=60):
     ml = NeuralNetwork(architecture)
 
     while True:
