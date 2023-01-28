@@ -3,7 +3,7 @@ import numpy as np
 
 
 class MiddleLayer(Layer):
-	def __init__(self, input_units, output_size, std,  _id, _inputs_id):
+	def __init__(self, input_units, output_size, std,  _id, _inputs_id, set_parameters, parameters):
 		super().__init__()
 		mean = 0
 		self.input = None
@@ -12,9 +12,18 @@ class MiddleLayer(Layer):
 		self.weights = []
 		self.num_of_inputs = len(input_units)
 		self.output_size = output_size
-		for i in range(self.num_of_inputs):
-			self.weights.append(np.random.normal(mean, std, (input_units[i], output_size)))
-		self.bias = np.random.normal(mean, std, (1, output_size))
+		if set_parameters:
+			for i in range(self.num_of_inputs):
+				if self.inputs_id[i][-1] == "-":
+					key = self.id + self.inputs_id[i][:-1] + "w"
+				else:
+					key = self.id + self.inputs_id[i] + "w"
+				self.weights.append(parameters[key])
+			self.bias = parameters[self.id + "b"]
+		else:
+			for i in range(self.num_of_inputs):
+				self.weights.append(np.random.normal(mean, std, (input_units[i], output_size)))
+			self.bias = np.random.normal(mean, std, (1, output_size))
 		self.type = LayerType.MIDDLE
 
 	def forward_propagation(self, output_layers_dict, t):
@@ -95,3 +104,13 @@ class MiddleLayer(Layer):
 			self.weights[i] -= nudge_layers_dict[key] * learning_rate * (1/batch_len)
 		self.bias -= nudge_layers_dict["d" + self.id + "b"] * learning_rate * (1/batch_len)
 		return
+
+	def save_parameters(self, parameters_dict):
+		for i in range(self.num_of_inputs):
+			if self.inputs_id[i][-1] == "-":
+				key = self.id + self.inputs_id[i][:-1] + "w"
+			else:
+				key = self.id + self.inputs_id[i] + "w"
+			parameters_dict[key] = self.weights[i]
+		parameters_dict[self.id + "b"] = self.bias
+		return parameters_dict

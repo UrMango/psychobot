@@ -57,6 +57,8 @@ class SoftmaxLayer(Layer):
 		self.input = None
 		return nudge_layers_dict, loss, accuracy
 
-
 	def nudge(self, nudge_layers_dict, learning_rate, batch_len):
 		pass
+
+	def save_parameters(self, parameters_dict):
+		return parameters_dict

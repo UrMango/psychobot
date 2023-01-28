@@ -23,3 +23,5 @@ class Layer:
     def nudge(self, nudge_layers_dict, learning_rate, batch_len):
         raise NotImplementedError
 
+    def save_parameters(self, parameters_dict):
+        raise NotImplementedError

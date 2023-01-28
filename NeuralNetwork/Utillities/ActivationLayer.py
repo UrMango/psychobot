@@ -38,3 +38,6 @@ class ActivationLayer(Layer):
 
 	def nudge(self, nudge_layers_dict, learning_rate, batch_len):
 		pass
+
+	def save_parameters(self, parameters_dict):
+		return parameters_dict

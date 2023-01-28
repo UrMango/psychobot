@@ -12,7 +12,8 @@ import re
 import random
 import spacy
 import matplotlib.pyplot as plt  #for visualization
-
+import json
+import pickle
 
 ArchitectureType = Architecture.ArchitectureType
 Architecture = Architecture.Architecture
@@ -28,11 +29,14 @@ beta2 = 0.99
 
 class GRU(Architecture):
     # Constructor
-    def __init__(self, list_of_feelings, hidden_units=256, learning_rate=1, std=0.01, embed=False):
+    def __init__(self, list_of_feelings, hidden_units=256, learning_rate=1, std=0.01, embed=False, set_parameters=False, parameters={}):
         super().__init__(ArchitectureType.NEW_LSTM)
 
         self.loss = []
         self.accuracy = []
+
+        self.set_parameters = set_parameters
+        self.parameters = parameters
 
         self.std = std
         self.input_units = INPUT_UNITS
@@ -41,7 +45,6 @@ class GRU(Architecture):
         self.hidden_units = hidden_units
         self.learning_rate = learning_rate
         self.accuracy_test = []
-
 
         self.output_layers_dict = {}
         self.nudge_layers_dict = {}
@@ -64,15 +67,15 @@ class GRU(Architecture):
     def initialize_layers(self):
         mean = 0
 
-        self.layers_dict["zr"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std,  "zr", ["h-", "x"])
-        self.layers_dict["rr"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std,  "rr", ["h-", "x"])
+        self.layers_dict["zr"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std,  "zr", ["h-", "x"], self.set_parameters, self.parameters)
+        self.layers_dict["rr"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std,  "rr", ["h-", "x"], self.set_parameters, self.parameters)
 
         self.layers_dict["z"] = ActivationLayer(Sigmoid.sigmoid, Sigmoid.derivative_sigmoid_by_func, "z", ["zr"])
         self.layers_dict["r"] = ActivationLayer(Sigmoid.sigmoid, Sigmoid.derivative_sigmoid_by_func, "r", ["rr"])
 
         self.layers_dict["mrh"] = MultiplyLayer("mrh", ["r", "h-"])
 
-        self.layers_dict["Hr"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std,  "Hr", ["mrh", "x"])
+        self.layers_dict["Hr"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std,  "Hr", ["mrh", "x"], self.set_parameters, self.parameters)
 
         self.layers_dict["H"] = ActivationLayer(Tanh.tanh, Tanh.tanh_derivative_by_func, "H", ["Hr"])
 
@@ -83,7 +86,7 @@ class GRU(Architecture):
 
         self.layers_dict["h"] = AddLayer("h", ["momzh", "mzH"])
 
-        self.layers_dict["sr"] = MiddleLayer([self.hidden_units], self.output_units, self.std,  "sr", ["h"])
+        self.layers_dict["sr"] = MiddleLayer([self.hidden_units], self.output_units, self.std,  "sr", ["h"], self.set_parameters, self.parameters)
         self.layers_dict["s"] = SoftmaxLayer("s", ["sr"])
 
     def reset_per_example(self):
@@ -226,53 +229,60 @@ class GRU(Architecture):
         avg_loss = list()
         avg_acc = list()
         i = 0
-        # while i < len(self.loss):
-        #     avg_loss.append(np.mean(self.loss[i:i + 10*examples]))
-        #     avg_acc.append(np.mean(self.accuracy[i:i + 10*examples]))
-        #     i += 10*examples
-        #
-        # plt1 = plt.figure(1)
-        # plt.plot(list(range(len(avg_loss))), avg_loss)
-        # plt.xlabel("x")
-        # plt.ylabel("Loss (Avg of 10 batches)")
-        # plt.title("Loss Graph Per Batch, learning rate: "+str(self.learning_rate)+" batch_size: "+str(examples))
-        # plt.show()
-        #
-        # plt2 = plt.figure(2)
-        # plt.plot(list(range(len(avg_acc))), avg_acc)
-        # plt.xlabel("x")
-        # plt.ylabel("Accuracy (Avg of 10 batches)")
-        # plt.title("Accuracy Graph Per Batch, learning rate: "+str(self.learning_rate)+" batch_size: "+str(examples))
-        # plt.show()
-        #
-        # avg_loss = []
-        # avg_acc = []
-        # i = 0
-        # while i < len(self.loss):
-        #     avg_loss.append(np.mean(self.loss[i:i + epochs]))
-        #     avg_acc.append(np.mean(self.accuracy[i:i + epochs]))
-        #     i += epochs
-        # plt3 = plt.figure(3)
-        # plt.plot(list(range(len(avg_loss))), avg_loss)
-        # plt.xlabel("x")
-        # plt.ylabel("Loss (Avg of epoch)")
-        # plt.title("Loss Graph Per Epoch, learning rate: "+str(self.learning_rate)+" batch_size: "+str(examples))
-        # plt.show()
-        #
-        # plt4 = plt.figure(4)
-        # plt.plot(list(range(len(avg_acc))), avg_acc)
-        # plt.xlabel("x")
-        # plt.ylabel("Accuracy (Avg of epoch)")
-        # plt.title("Accuracy Graph Per Epoch, learning rate: "+str(self.learning_rate)+" batch_size: "+str(examples))
-        # plt.show()
+        while i < len(self.loss):
+            avg_loss.append(np.mean(self.loss[i:i + 10*examples]))
+            avg_acc.append(np.mean(self.accuracy[i:i + 10*examples]))
+            i += 10*examples
+
+        plt1 = plt.figure(1)
+        plt.plot(list(range(len(avg_loss))), avg_loss)
+        plt.xlabel("x")
+        plt.ylabel("Loss (Avg of 10 batches)")
+        plt.title("Loss Graph Per Batch, learning rate: "+str(self.learning_rate)+" batch_size: "+str(examples))
+        plt.show()
+
+        plt2 = plt.figure(2)
+        plt.plot(list(range(len(avg_acc))), avg_acc)
+        plt.xlabel("x")
+        plt.ylabel("Accuracy (Avg of 10 batches)")
+        plt.title("Accuracy Graph Per Batch, learning rate: "+str(self.learning_rate)+" batch_size: "+str(examples))
+        plt.show()
+
+        avg_loss = []
+        avg_acc = []
+        i = 0
+        while i < len(self.loss):
+            avg_loss.append(np.mean(self.loss[i:i + epochs]))
+            avg_acc.append(np.mean(self.accuracy[i:i + epochs]))
+            i += epochs
+        plt3 = plt.figure(3)
+        plt.plot(list(range(len(avg_loss))), avg_loss)
+        plt.xlabel("x")
+        plt.ylabel("Loss (Avg of epoch)")
+        plt.title("Loss Graph Per Epoch, learning rate: "+str(self.learning_rate)+" batch_size: "+str(examples))
+        plt.show()
+
+        plt4 = plt.figure(4)
+        plt.plot(list(range(len(avg_acc))), avg_acc)
+        plt.xlabel("x")
+        plt.ylabel("Accuracy (Avg of epoch)")
+        plt.title("Accuracy Graph Per Epoch, learning rate: "+str(self.learning_rate)+" batch_size: "+str(examples))
+        plt.show()
 
         avg_loss = accuracy_test
-        plt5 = plt.figure(1)
+        plt5 = plt.figure(5)
         plt.plot(list(range(len(avg_acc))), avg_acc)
         plt.xlabel("x")
         plt.ylabel("Accuracy (Avg of epoch)")
         plt.title("Accuracy On Test Data, learning rate: " + str(self.learning_rate) + " batch_size: " + str(examples))
         plt.show()
+
+    def save_parameters(self):
+        dict_parameters = {}
+        for key in self.layers_dict.keys():
+            dict_parameters = self.layers_dict[key].save_parameters(dict_parameters)
+        with open("parameters_"+str(self.list_of_feelings)+".json", 'wb') as f:
+            pickle.dump(dict_parameters, f, protocol=pickle.HIGHEST_PROTOCOL)
 
     # train function
     def train(self, train_dataset, test_dataset, epochs):
@@ -300,5 +310,5 @@ class GRU(Architecture):
 
         print()
         self.print_graph(epochs, len(train_dataset[0]), self.accuracy_test)
-
+        self.save_parameters()
         return self.accuracy_test

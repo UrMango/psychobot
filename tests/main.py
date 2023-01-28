@@ -7,6 +7,7 @@ import time
 import math
 import numpy as np
 import spacy
+import pickle
 
 from Dataset.dataset_loader import Dataset
 
@@ -91,7 +92,7 @@ def separate_dataset_to_batches(dataset, batch_size):
 
 
 def machine(answer, list_of_feelings, architecture, batch_size=60):
-    ml = NeuralNetwork(architecture)
+    ml = architecture
 
     while True:
         if answer:
@@ -105,8 +106,9 @@ def machine(answer, list_of_feelings, architecture, batch_size=60):
 
         examples = separate_dataset_to_batches(examples[0], batch_size)
         print("Hello! 😀 I'm PsychoBot.\nMy thing is sentiment analysis.\n")
-
         accuracy_test = ml.train(examples[:int(len(examples) * TRAINING_SET_PERCENTAGE)], examples[int(len(examples) * TRAINING_SET_PERCENTAGE):], EPOCHS)
+
+        ml.save_parameters()
         return accuracy_test
 
         # ["anger", "disgust", "fear", "joy", "sadness"]
@@ -159,37 +161,43 @@ def main():
             "1 - Train the machine on prepared dataset\n2 - Train the machine on un-prepared dataset\n3 - Use working machine\n4 - I've seen enough")
         choice = int(input())
         if choice == 1:
-            if ml is not None:
-                print(
-                    "Training a new machine will overwrite the previous machine you've made.\nAre you sure you want to train a new one? Y/n")
-                choice = input()
-                print("")
-                if choice.lower() == "y":
-                    with open('list.json', 'r') as f:
-                        list_of_feelings = json.load(f)
-                    ml = machine(False, list_of_feelings)
-            else:
-                with open('list.json', 'r') as f:
-                    list_of_feelings = json.load(f)
-                if arch == "LSTM":
-                    ml = machine(False, list_of_feelings, NEW_LSTM(list_of_feelings))
-                if arch == "GRU":
-                    ml = machine(False, list_of_feelings, GRU(list_of_feelings))
+            with open('list.json', 'r') as f:
+                list_of_feelings = json.load(f)
+            if arch == "LSTM":
+                machine(False, list_of_feelings, NEW_LSTM(list_of_feelings))
+            if arch == "GRU":
+                machine(False, list_of_feelings, GRU(list_of_feelings))
         elif choice == 2:
             print("Enter the list of feelings:")
             list_of_feelings = input()
             list_of_feelings = list(list_of_feelings.split(", "))
             print(list_of_feelings)
-            ml = machine(True, list_of_feelings)
+            machine(True, list_of_feelings, GRU(list_of_feelings))
         elif choice == 3:
-            print("This is not possible yet")
+            with open('list.json', 'r') as f:
+                list_of_feelings = json.load(f)
+            print("This is now possible!!!")
+            with open("parameters_"+str(list_of_feelings)+".json", 'rb') as f:
+                dict_parameters = pickle.load(f)
+            ml = GRU(list_of_feelings, set_parameters=True, parameters=dict_parameters, embed=True)
+            examples = np.load('./all-datasets/30k-happy-sadness-anger/data.npy', allow_pickle=True)
+            print("Accuracy on validation set: "+str(100*ml.test(examples[int(len(examples) * TRAINING_SET_PERCENTAGE):]))+"%")
+            sentence = ""
+            while sentence != "Stop":
+                sentence = input("Write a sentence that you want the machine will check: ")
+                feeling, dict = ml.run_model_with_embedding(sentence)
+                print("Feeling: "+feeling)
+                for feel in list_of_feelings:
+                    print(feel + ": " + str(dict[feel]))
+                print("")
+                print("")
         elif choice == 4:
             print("Bye bye 👋")
         elif choice == 5:
             print("You enter the secret option")
             with open('list.json', 'r') as f:
                 list_of_feelings = json.load(f)
-            ml = machine_with_params(list_of_feelings)
+            machine_with_params(list_of_feelings)
 
 
 if __name__ == '__main__':
