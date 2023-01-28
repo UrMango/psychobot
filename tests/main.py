@@ -22,7 +22,7 @@ from gensim import downloader
 
 import re
 
-EPOCHS = 15
+EPOCHS = 20
 
 NUMBER_OF_EXAMPLES_IN_BATCH = 100
 
@@ -48,7 +48,7 @@ class NpEncoder(json.JSONEncoder):
 
 
 def machine_with_params(list_of_feelings):
-    learning_rates = [1, 0.01]
+    learning_rates = [1, 0.1 ,0.01]
     batch_sizes = [30, 60, 100, 200]
     hidden_units = [512, 400, 300, 256, 128]
 
@@ -104,7 +104,6 @@ def machine(answer, list_of_feelings, architecture, batch_size=100):
             examples = np.load('./all-datasets/30k-happy-sadness-anger/data.npy', allow_pickle=True)
 
         examples = separate_dataset_to_batches(examples[0], batch_size)
-
         print("Hello! 😀 I'm PsychoBot.\nMy thing is sentiment analysis.\n")
 
         accuracy_test = ml.train(examples[:int(len(examples) * TRAINING_SET_PERCENTAGE)], examples[int(len(examples) * TRAINING_SET_PERCENTAGE):], EPOCHS)

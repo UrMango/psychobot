@@ -297,7 +297,6 @@ class GRU(Architecture):
 
                 print('\r' + "Training 💪 - " + "{:.2f}".format(100 * (1+batch_i+len(train_dataset)*i)/(epochs*len(train_dataset))) + "% | batch: " + str(1+batch_i+len(train_dataset)*i) + "/" + str(epochs*len(train_dataset)), end="")
             self.accuracy_test.append(self.test(test_dataset))
-        print("If this number don't match you got a problem: " + str(len(self.loss)) + ", " + str(len(self.accuracy)))
 
         print()
         self.print_graph(epochs, len(train_dataset[0]), self.accuracy_test)
