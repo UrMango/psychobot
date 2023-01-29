@@ -28,6 +28,7 @@ class Sigmoid:
 class Softmax:
 	@staticmethod
 	def softmax(x):
+		x = x - np.max(x)
 		return np.exp(x) / np.sum(np.exp(x))
 
 	@staticmethod
