@@ -23,7 +23,7 @@ from gensim import downloader
 
 import re
 
-EPOCHS = 21
+EPOCHS = 20
 
 NUMBER_OF_EXAMPLES_IN_BATCH = 100
 
@@ -46,7 +46,7 @@ class NpEncoder(json.JSONEncoder):
 
 def machine_with_params(list_of_feelings):
     learning_rates = [1, 0.1 ,0.01]
-    batch_sizes = [30, 60, 100, 200]
+    batch_sizes = [60, 100]
     hidden_units = [512, 400, 300, 256, 128]
 
     rates = []
@@ -61,6 +61,7 @@ def machine_with_params(list_of_feelings):
     # for rate in rates:
     #     print("rate: " + str(rate["rate"]) + " - " + str(rate["precents"]) + "%")
     #
+    accuracy_test = machine(True, list_of_feelings, GRU(list_of_feelings, learning_rate=0.001), batch_size=60)
     for rate in learning_rates:
         print('\n↓↓↓  LEARNING RATE: ' + str(rate) + ' ↓↓↓')
         for size in batch_sizes:
