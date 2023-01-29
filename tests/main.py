@@ -92,9 +92,7 @@ def machine(answer, list_of_feelings, architecture, batch_size=60):
 
     while True:
         if answer:
-            dataset_path, examples = Dataset.save_dataset(ArchitectureType.LSTM, int(EXAMPLES/NUMBER_OF_EXAMPLES_IN_BATCH), EXAMPLES,
-                                                          'data.npy',
-                                                          list_of_feelings)
+            dataset_path, examples = Dataset.save_dataset(ArchitectureType.LSTM, 1, EXAMPLES, 'data.npy', list_of_feelings)
             with open('list.json', 'w') as f:
                 json.dump(list_of_feelings, f)
         else:
@@ -103,7 +101,7 @@ def machine(answer, list_of_feelings, architecture, batch_size=60):
         examples = separate_dataset_to_batches(examples[0], batch_size)
         print("Hello! 😀 I'm PsychoBot.\nMy thing is sentiment analysis.\n")
         accuracy_test = ml.train(examples[:int(len(examples) * TRAINING_SET_PERCENTAGE)], examples[int(len(examples) * TRAINING_SET_PERCENTAGE):], EPOCHS)
-
+        print(accuracy_test)
         ml.save_parameters()
         return accuracy_test
 
