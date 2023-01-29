@@ -23,19 +23,15 @@ from gensim import downloader
 
 import re
 
-EPOCHS = 13
+EPOCHS = 21
 
 NUMBER_OF_EXAMPLES_IN_BATCH = 100
 
-EXAMPLES = 30000
+EXAMPLES = 25000
 
 TRAINING_SET_PERCENTAGE = 0.8
 
 nlp = spacy.load("en_core_web_sm")
-
-def accuracy(right, current):
-    return 100 - np.abs(((right - current) / right) * 100)
-
 
 class NpEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -166,13 +162,16 @@ def main():
             if arch == "LSTM":
                 machine(False, list_of_feelings, NEW_LSTM(list_of_feelings))
             if arch == "GRU":
-                machine(False, list_of_feelings, GRU(list_of_feelings))
+                accuracy = machine(False, list_of_feelings, GRU(list_of_feelings))
+                print("Accuracy on validation set: " + str(100*accuracy[-1]) + "%")
+
         elif choice == 2:
             print("Enter the list of feelings:")
             list_of_feelings = input()
             list_of_feelings = list(list_of_feelings.split(", "))
             print(list_of_feelings)
-            machine(True, list_of_feelings, GRU(list_of_feelings))
+            accuracy = machine(True, list_of_feelings, GRU(list_of_feelings))
+            print("Accuracy on validation set: " + str(100 * accuracy[-1]) + "%")
         elif choice == 3:
             with open('list.json', 'r') as f:
                 list_of_feelings = json.load(f)
