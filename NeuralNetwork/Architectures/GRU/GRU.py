@@ -251,10 +251,11 @@ class GRU(Architecture):
         avg_loss = []
         avg_acc = []
         i = 0
+        examples_in_epoch = len(self.loss) / epochs
         while i < len(self.loss):
-            avg_loss.append(np.mean(self.loss[i:i + epochs]))
-            avg_acc.append(np.mean(self.accuracy[i:i + epochs]))
-            i += epochs
+            avg_loss.append(np.mean(self.loss[i:i + examples_in_epoch]))
+            avg_acc.append(np.mean(self.accuracy[i:i + examples_in_epoch]))
+            i += examples_in_epoch
         plt3 = plt.figure(3)
         plt.plot(list(range(len(avg_loss))), avg_loss)
         plt.xlabel("x")
@@ -269,7 +270,7 @@ class GRU(Architecture):
         plt.title("Accuracy Graph Per Epoch, learning rate: "+str(self.learning_rate)+" batch_size: "+str(examples))
         plt.show()
 
-        avg_loss = accuracy_test
+        avg_acc = accuracy_test
         plt5 = plt.figure(5)
         plt.plot(list(range(len(avg_acc))), avg_acc)
         plt.xlabel("x")
