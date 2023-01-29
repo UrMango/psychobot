@@ -61,7 +61,8 @@ class Dataset:
 
                     while (Dataset.df.example_very_unclear[Dataset.last_count] == 'TRUE' or
                            all(getattr(Dataset.df, emotion)[Dataset.last_count] == 0 for emotion in
-                               list_of_feelings)) or stop_grow or (Dataset.df.id[Dataset.last_count] != "e2718281-mango-god" and Dataset.df.id[Dataset.last_count] != "pi31415-42-69"):
+                               list_of_feelings)) or stop_grow:
+                        # (Dataset.df.id[Dataset.last_count] != "e2718281-mango-god" and Dataset.df.id[Dataset.last_count] != "pi31415-42-69")
                         Dataset.last_count += 1
                         stop_grow = False
                         for k, emotion2 in enumerate(list_of_feelings):
@@ -153,11 +154,10 @@ class Dataset:
 
         for batch in vector:
             random.shuffle(batch)
-        amount_for_print = ""
+        amount_for_print = "\n"
         for i in range(len(list_of_feelings)):
             amount_for_print = amount_for_print + str(emotions_count[i])+", "
         print(amount_for_print)
-
         return vector
 
     @staticmethod
@@ -246,7 +246,7 @@ class Dataset:
     def save_dataset(arch_type, batches, examples, file_name, list_of_feelings):
         examples = Dataset.make_examples(arch_type, batches, examples, list_of_feelings)
 
-        np.save(file_name, examples)
+        # np.save(file_name, examples)
 
         return file_name, examples
 
