@@ -23,7 +23,7 @@ from gensim import downloader
 
 import re
 
-EPOCHS = 20
+EPOCHS = 10
 
 NUMBER_OF_EXAMPLES_IN_BATCH = 100
 
@@ -45,7 +45,7 @@ class NpEncoder(json.JSONEncoder):
 
 
 def machine_with_params(list_of_feelings):
-    learning_rates = [1, 0.1 ,0.01]
+    learning_rates = [0.1, 0.01]
     batch_sizes = [60, 100]
     hidden_units = [512, 400, 300, 256, 128]
 
@@ -61,12 +61,11 @@ def machine_with_params(list_of_feelings):
     # for rate in rates:
     #     print("rate: " + str(rate["rate"]) + " - " + str(rate["precents"]) + "%")
     #
-    accuracy_test = machine(True, list_of_feelings, GRU(list_of_feelings, learning_rate=0.001), batch_size=60)
     for rate in learning_rates:
         print('\n↓↓↓  LEARNING RATE: ' + str(rate) + ' ↓↓↓')
         for size in batch_sizes:
             print('\n↓↓↓ SIZES: ' + str(size) + ' ↓↓↓')
-            accuracy_test = machine(False, list_of_feelings, GRU(list_of_feelings, learning_rate=rate), batch_size=size)
+            accuracy_test = machine(True, list_of_feelings, GRU(list_of_feelings, learning_rate=rate), batch_size=size)
             for i in range(EPOCHS):
                 dict_params["batch size: "+str(size)+", learning rate: "+str(rate)+", epoch: "+str(i)+" - "] = 100*accuracy_test[i]
                 print("batch size: "+str(size)+", learning rate: "+str(rate)+", epoch: "+str(i)+" - " + str(100*accuracy_test[i]) + "%")
@@ -87,56 +86,21 @@ def separate_dataset_to_batches(dataset, batch_size):
         batches.append(dataset[i:i + batch_size])
     return batches
 
-
 def machine(answer, list_of_feelings, architecture, batch_size=60):
     ml = architecture
 
     while True:
         if answer:
-            dataset_path, examples = Dataset.save_dataset(ArchitectureType.LSTM, 1, EXAMPLES, 'data.npy', list_of_feelings)
+            dataset_path, examples = Dataset.save_dataset(ArchitectureType.LSTM, EXAMPLES, 'data.npy', list_of_feelings)
             with open('list.json', 'w') as f:
                 json.dump(list_of_feelings, f)
         else:
             examples = np.load('./all-datasets/30k-happy-sadness-anger/data.npy', allow_pickle=True)
-
-        examples = separate_dataset_to_batches(examples[0], batch_size)
+        examples = separate_dataset_to_batches(examples, batch_size)
         print("Hello! 😀 I'm PsychoBot.\nMy thing is sentiment analysis.\n")
         accuracy_test = ml.train(examples[:int(len(examples) * TRAINING_SET_PERCENTAGE)], examples[int(len(examples) * TRAINING_SET_PERCENTAGE):], EPOCHS)
         print(accuracy_test)
-        ml.save_parameters()
         return accuracy_test
-
-        # ["anger", "disgust", "fear", "joy", "sadness"]
-        # anger, disgust, fear, joy, sadness
-        # happy, anger, sadness
-        # admiration
-        # amusement
-        # anger
-        # annoyance
-        # approval
-        # caring
-        # confusion
-        # curiosity
-        # desire
-        # disappointment
-        # disapproval
-        # disgust
-        # embarrassment
-        # enthusiasm
-        # fear
-        # gratitude
-        # grief
-        # happy
-        # love
-        # worry
-        # optimism
-        # pride
-        # realization
-        # relief
-        # remorse
-        # sadness
-        # surprise
-        # neutral
 
 def get_model():
     # use pre-trained model and use it
@@ -178,8 +142,8 @@ def main():
             with open("parameters_"+str(list_of_feelings)+".json", 'rb') as f:
                 dict_parameters = pickle.load(f)
             ml = GRU(list_of_feelings, set_parameters=True, parameters=dict_parameters, embed=True)
-            examples = np.load('./all-datasets/30k-happy-sadness-anger/data.npy', allow_pickle=True)
-            print("Accuracy on validation set: "+str(100*ml.test(examples[int(len(examples) * TRAINING_SET_PERCENTAGE):]))+"%")
+            #examples = np.load('./all-datasets/30k-happy-sadness-anger/data.npy', allow_pickle=True)
+            #print("Accuracy on validation set: "+str(100*ml.test(examples[int(len(examples) * TRAINING_SET_PERCENTAGE):]))+"%")
             sentence = ""
             while sentence != "Stop":
                 sentence = input("Write a sentence that you want the machine will check: ")

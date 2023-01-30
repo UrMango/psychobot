@@ -288,6 +288,7 @@ class GRU(Architecture):
 
     # train function
     def train(self, train_dataset, test_dataset, epochs):
+        valid = 0
         for i in range(epochs):
             batch_i = -1
             for batch in train_dataset:
@@ -309,6 +310,9 @@ class GRU(Architecture):
 
                 print('\r' + "Training 💪 - " + "{:.2f}".format(100 * (1+batch_i+len(train_dataset)*i)/(epochs*len(train_dataset))) + "% | batch: " + str(1+batch_i+len(train_dataset)*i) + "/" + str(epochs*len(train_dataset)), end="")
             self.accuracy_test.append(self.test(test_dataset))
+            if self.accuracy_test[-1] > valid:
+                valid = self.accuracy_test[-1]
+                self.save_parameters()
 
         print()
         self.print_graph(epochs, len(train_dataset[0]), self.accuracy_test)
