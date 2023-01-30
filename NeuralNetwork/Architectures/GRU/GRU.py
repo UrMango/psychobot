@@ -252,6 +252,7 @@ class GRU(Architecture):
         avg_acc = []
         i = 0
         examples_in_epoch = len(self.loss) / epochs
+        examples_in_epoch = int(examples_in_epoch)
         while i < len(self.loss):
             avg_loss.append(np.mean(self.loss[i:i + examples_in_epoch]))
             avg_acc.append(np.mean(self.accuracy[i:i + examples_in_epoch]))
