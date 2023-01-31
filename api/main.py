@@ -5,6 +5,7 @@ from flask import Flask, request, send_from_directory
 from flask_cors import CORS
 
 from NeuralNetwork.Architectures.LSTM.LSTM import LSTM
+from NeuralNetwork.Architectures.GRU.GRU import GRU
 from NeuralNetwork.NeuralNetwork import NeuralNetwork
 
 app = Flask(__name__)
@@ -72,24 +73,27 @@ def update():
     }
 
 
+def separate_dataset_to_batches(dataset, batch_size):
+    batches = []
+    for i in range(0, len(dataset), batch_size):
+        batches.append(dataset[i:i + batch_size])
+    return batches
+
+
 if __name__ == '__main__':
     global ml
     # initialize ML
 
     list_of_feelings = []
-    with open('list.json', 'r') as f:
+    with open(r'./30k-happy-sadness-anger/list.json', 'r') as f:
         list_of_feelings = json.load(f)
 
-    ml = NeuralNetwork(LSTM(list_of_feelings))
-    examples = np.load('data.npy', allow_pickle=True)
+    ml = NeuralNetwork(GRU(list_of_feelings, learning_rate=1, embed=True))
+    examples = np.load(r'./30k-happy-sadness-anger/data.npy', allow_pickle=True)
 
-    count = 0
-    for batch in examples:
-        ml.train(batch, len(batch))
-        count += 1
-        print('\r' + "Training 💪 - " + "{:.2f}".format(100 * (count / len(examples))) + "% | batch: " + str(
-            count) + "/" + str(len(examples)), end="")
-    print("\rTraining 💪 was completed successfully!")
+    examples = separate_dataset_to_batches(examples[0], 100)
+
+    ml.train(examples[:int(len(examples) * 0.8)], 15)
 
     app.run(host='0.0.0.0', port=8080)
     # serve(app, host='0.0.0.0', port=80, ssl_context=('cert.crt', 'cert.key'))
