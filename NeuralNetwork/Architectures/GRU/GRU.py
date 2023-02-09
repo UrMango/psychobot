@@ -96,7 +96,9 @@ class GRU(Architecture):
         self.layers_dict["s"] = SoftmaxLayer("s", ["sr"])
 
     def reset_per_example(self):
-        params_keys = ["dzrhw", "drrhw", "dzrxw", "drrxw", "dzrb", "drrb", "dHrmrhw", "dHrxw", "dHrb", "dsrhw", "dsrb"]
+        params_keys = ["dzrrrhw", "drrrrhw", "dzrrrxw", "drrrrxw", "dzrrrb", "drrrrb",
+                       "dzrhw", "drrhw", "dzrxw", "drrxw", "dzrb", "drrb",
+                       "dHrmrhw", "dHrxw", "dHrb", "dsrhw", "dsrb"]
         keys = list(self.nudge_layers_dict.keys())
         copy_keys = keys.copy()
         for key in copy_keys:
