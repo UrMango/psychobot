@@ -33,16 +33,6 @@ TRAINING_SET_PERCENTAGE = 0.8
 
 nlp = spacy.load("en_core_web_sm")
 
-class NpEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, np.integer):
-            return int(obj)
-        if isinstance(obj, np.floating):
-            return float(obj)
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        return json.JSONEncoder.default(self, obj)
-
 
 def machine_with_params(list_of_feelings):
     learning_rates = [0.1, 0.01]
@@ -80,11 +70,13 @@ def machine_with_params(list_of_feelings):
     # for unit in units:
     #     print("unit: " + str(unit["unit"]) + " - " + str(unit["precents"]) + "%")
 
+
 def separate_dataset_to_batches(dataset, batch_size):
     batches = []
     for i in range(0, len(dataset), batch_size):
         batches.append(dataset[i:i + batch_size])
     return batches
+
 
 def machine(answer, list_of_feelings, architecture, batch_size=60):
     ml = architecture
@@ -101,6 +93,7 @@ def machine(answer, list_of_feelings, architecture, batch_size=60):
         accuracy_test = ml.train(examples[:int(len(examples) * TRAINING_SET_PERCENTAGE)], examples[int(len(examples) * TRAINING_SET_PERCENTAGE):], EPOCHS)
         print(accuracy_test)
         return accuracy_test
+
 
 def get_model():
     # use pre-trained model and use it
