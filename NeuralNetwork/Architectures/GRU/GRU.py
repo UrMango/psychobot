@@ -124,7 +124,7 @@ class GRU(Architecture):
         for t in range(len(sentence)):
             self.output_layers_dict["x"+str(t+1)] = vector_sentence[t]
 
-        layers = ['zr', 'rr', 'z', 'r', 'mrh', 'Hr', 'H', 'omz', 'momzh', 'mzH', 'h']
+        layers = ['zrrr', 'rrrr', 'zrr', 'rrr', 'zr', 'rr', 'z', 'r', 'mrh', 'Hr', 'H', 'omz', 'momzh', 'mzH', 'h']
         for t in range(1, len(sentence)+1):
             for key in layers:
                 self.output_layers_dict = self.layers_dict[key].forward_propagation(self.output_layers_dict, t)
@@ -143,7 +143,7 @@ class GRU(Architecture):
         self.loss.append(loss)
         self.accuracy.append(accuracy)
         self.nudge_layers_dict = self.layers_dict["sr"].backward_propagation(self.nudge_layers_dict, self.output_layers_dict, len(sentence))
-        layers = ['h', 'mzH', 'momzh', 'omz', 'H', 'Hr', 'mrh', 'r', 'z', 'rr', 'zr']
+        layers = ['h', 'mzH', 'momzh', 'omz', 'H', 'Hr', 'mrh', 'r', 'z', 'rr', 'zr', 'rrr', 'zrr', 'rrrr', 'zrrr']
         for t in range(len(sentence), 0, -1):
             for layer in layers:
                 self.nudge_layers_dict = self.layers_dict[layer].backward_propagation(self.nudge_layers_dict, self.output_layers_dict, t)
