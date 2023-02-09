@@ -67,8 +67,14 @@ class GRU(Architecture):
     def initialize_layers(self):
         mean = 0
 
-        self.layers_dict["zr"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std,  "zr", ["h-", "x"], self.set_parameters, self.parameters)
-        self.layers_dict["rr"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std,  "rr", ["h-", "x"], self.set_parameters, self.parameters)
+        self.layers_dict["zrrr"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std,  "zrrr", ["h-", "x"], self.set_parameters, self.parameters)
+        self.layers_dict["rrrr"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std,  "rrrr", ["h-", "x"], self.set_parameters, self.parameters)
+
+        self.layers_dict["zrr"] = ActivationLayer(Sigmoid.sigmoid, Sigmoid.derivative_sigmoid_by_func, "zrr", ["zrrr"])
+        self.layers_dict["rrr"] = ActivationLayer(Sigmoid.sigmoid, Sigmoid.derivative_sigmoid_by_func, "rrr", ["rrrr"])
+
+        self.layers_dict["zr"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std, "zr", ["zrr"], self.set_parameters, self.parameters)
+        self.layers_dict["rr"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std, "rr", ["rrr"], self.set_parameters, self.parameters)
 
         self.layers_dict["z"] = ActivationLayer(Sigmoid.sigmoid, Sigmoid.derivative_sigmoid_by_func, "z", ["zr"])
         self.layers_dict["r"] = ActivationLayer(Sigmoid.sigmoid, Sigmoid.derivative_sigmoid_by_func, "r", ["rr"])
