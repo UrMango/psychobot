@@ -73,8 +73,8 @@ class GRU(Architecture):
         self.layers_dict["zrr"] = ActivationLayer(Sigmoid.sigmoid, Sigmoid.derivative_sigmoid_by_func, "zrr", ["zrrr"])
         self.layers_dict["rrr"] = ActivationLayer(Sigmoid.sigmoid, Sigmoid.derivative_sigmoid_by_func, "rrr", ["rrrr"])
 
-        self.layers_dict["zr"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std, "zr", ["zrr"], self.set_parameters, self.parameters)
-        self.layers_dict["rr"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std, "rr", ["rrr"], self.set_parameters, self.parameters)
+        self.layers_dict["zr"] = MiddleLayer([self.hidden_units], self.hidden_units, self.std, "zr", ["zrr"], self.set_parameters, self.parameters)
+        self.layers_dict["rr"] = MiddleLayer([self.hidden_units], self.hidden_units, self.std, "rr", ["rrr"], self.set_parameters, self.parameters)
 
         self.layers_dict["z"] = ActivationLayer(Sigmoid.sigmoid, Sigmoid.derivative_sigmoid_by_func, "z", ["zr"])
         self.layers_dict["r"] = ActivationLayer(Sigmoid.sigmoid, Sigmoid.derivative_sigmoid_by_func, "r", ["rr"])
@@ -97,7 +97,7 @@ class GRU(Architecture):
 
     def reset_per_example(self):
         params_keys = ["dzrrrhw", "drrrrhw", "dzrrrxw", "drrrrxw", "dzrrrb", "drrrrb",
-                       "dzrhw", "drrhw", "dzrxw", "drrxw", "dzrb", "drrb",
+                       "dzrzrrw", "drrrrrw", "dzrb", "drrb",
                        "dHrmrhw", "dHrxw", "dHrb", "dsrhw", "dsrb"]
         keys = list(self.nudge_layers_dict.keys())
         copy_keys = keys.copy()

@@ -40,6 +40,9 @@ class MiddleLayer(Layer):
 
 		self.output = np.zeros((1, self.output_size), dtype=np.float32)
 		for i in range(self.num_of_inputs):
+			# if self.input[i].shape[1] != self.weights[i].shape[0]:
+			# 	self.input[i] = self.input[i].T
+			# print(self.id)
 			self.output += np.dot(self.input[i], self.weights[i])  # sum up all the inputs
 		self.output = np.add(self.output, self.bias)
 		output_layers_dict[self.id+time] = self.output
