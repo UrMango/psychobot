@@ -23,7 +23,7 @@ from gensim import downloader
 
 import re
 
-EPOCHS = 10
+EPOCHS = 15
 
 NUMBER_OF_EXAMPLES_IN_BATCH = 100
 
@@ -35,9 +35,9 @@ nlp = spacy.load("en_core_web_sm")
 
 
 def machine_with_params(list_of_feelings):
-    learning_rates = [0.1, 0.01]
+    learning_rates = [1, 0.1]
     batch_sizes = [60, 100]
-    hidden_units = [512, 400, 300, 256, 128]
+    hidden_units = [350, 150]
 
     rates = []
     sizes = []
@@ -51,14 +51,30 @@ def machine_with_params(list_of_feelings):
     # for rate in rates:
     #     print("rate: " + str(rate["rate"]) + " - " + str(rate["precents"]) + "%")
     #
+    # for rate in learning_rates:
+    #     print('\n↓↓↓  LEARNING RATE: ' + str(rate) + ' ↓↓↓')
+    #     for size in batch_sizes:
+    #         print('\n↓↓↓ SIZES: ' + str(size) + ' ↓↓↓')
+    #         accuracy_test = machine(True, list_of_feelings, GRU(list_of_feelings, learning_rate=rate), batch_size=size)
+    #         for i in range(EPOCHS):
+    #             dict_params["batch size: "+str(size)+", learning rate: "+str(rate)+", epoch: "+str(i)+" - "] = 100*accuracy_test[i]
+    #             print("batch size: "+str(size)+", learning rate: "+str(rate)+", epoch: "+str(i)+" - " + str(100*accuracy_test[i]) + "%")
+    #     print("\nTOTAL PERCENTS")
+    #     for key in dict_params.keys():
+    #         print(key + str(dict_params[key]) + "%")
+
     for rate in learning_rates:
         print('\n↓↓↓  LEARNING RATE: ' + str(rate) + ' ↓↓↓')
-        for size in batch_sizes:
-            print('\n↓↓↓ SIZES: ' + str(size) + ' ↓↓↓')
-            accuracy_test = machine(True, list_of_feelings, GRU(list_of_feelings, learning_rate=rate), batch_size=size)
+        for unit in hidden_units:
+            print('\n↓↓↓ HIDDEN: ' + str(unit) + ' ↓↓↓')
+            accuracy_test = machine(True, list_of_feelings, GRU(list_of_feelings, learning_rate=rate, hidden_units=unit), batch_size=60)
             for i in range(EPOCHS):
-                dict_params["batch size: "+str(size)+", learning rate: "+str(rate)+", epoch: "+str(i)+" - "] = 100*accuracy_test[i]
-                print("batch size: "+str(size)+", learning rate: "+str(rate)+", epoch: "+str(i)+" - " + str(100*accuracy_test[i]) + "%")
+                dict_params[
+                    "hidden: " + str(unit) + ", learning rate: " + str(rate) + ", epoch: " + str(i) + " - "] = 100 * \
+                                                                                                                   accuracy_test[
+                                                                                                                       i]
+                print("hidden: " + str(unit) + ", learning rate: " + str(rate) + ", epoch: " + str(i) + " - " + str(
+                    100 * accuracy_test[i]) + "%")
         print("\nTOTAL PERCENTS")
         for key in dict_params.keys():
             print(key + str(dict_params[key]) + "%")

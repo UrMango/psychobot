@@ -237,7 +237,7 @@ class Dataset:
     def save_dataset(arch_type, examples, file_name, list_of_feelings):
         examples = Dataset.make_examples(arch_type, examples, list_of_feelings)
 
-        # np.save(file_name, examples)
+        np.save(file_name, examples)
 
         return file_name, examples
 
