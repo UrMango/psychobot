@@ -1,4 +1,6 @@
 import numpy as np
+import wandb
+
 from NeuralNetwork.Architectures import Architecture
 from NeuralNetwork.Utillities.MiddleLayer import MiddleLayer
 from NeuralNetwork.Utillities.ActivationLayer import ActivationLayer
@@ -30,7 +32,9 @@ beta2 = 0.99
 class GRU(Architecture):
     # Constructor
     def __init__(self, list_of_feelings, hidden_units=256, learning_rate=1, std=0.01, embed=False, set_parameters=False, parameters={}):
-        super().__init__(ArchitectureType.NEW_LSTM)
+        super().__init__(ArchitectureType.GRU)
+
+        self.run = None
 
         self.loss = []
         self.accuracy = []
@@ -142,6 +146,8 @@ class GRU(Architecture):
         self.nudge_layers_dict, loss, accuracy = self.layers_dict["s"].backward_propagation(self.nudge_layers_dict, self.output_layers_dict, sentence_labels, len(sentence))
         self.loss.append(loss)
         self.accuracy.append(accuracy)
+        wandb.log({"loss": loss})
+        wandb.log({"accuracy": accuracy})
         self.nudge_layers_dict = self.layers_dict["sr"].backward_propagation(self.nudge_layers_dict, self.output_layers_dict, len(sentence))
         layers = ['h', 'mzH', 'momzh', 'omz', 'H', 'Hr', 'mrh', 'r', 'z', 'rr', 'zr', 'rrr', 'zrr', 'rrrr', 'zrrr']
         for t in range(len(sentence), 0, -1):
@@ -157,9 +163,16 @@ class GRU(Architecture):
 
         return output
 
-    def test(self, examples):
+    def test(self, examples, epoch=0):
         test_len = 0
         amount_true = 0
+
+        cols = ["Text", "Expected feeling", "Feeling"]
+        for feeling in self.list_of_feelings:
+            cols.append(feeling)
+
+        text_table = wandb.Table(columns=cols)
+
         for batch in examples:
             for example in batch:
                 ls = []
@@ -169,14 +182,19 @@ class GRU(Architecture):
                     if i > 0:
                         if ls[i] > ls[i - 1]:
                             up_index = i
-                if self.check_input(example[0], self.list_of_feelings[up_index], up_index, self.list_of_feelings):
+                if self.check_input(example[0], self.list_of_feelings[up_index], up_index, self.list_of_feelings, text_table, GRU.ascii_arr_to_text(example[2])):
                     amount_true += 1
                 test_len += 1
+
+        name = "validation_samples-" + str(epoch)
+        wandb.log({name: text_table})
         return amount_true / test_len
-    def check_input(self, input_data, expected_feeling, expected_feeling_index, list_of_feelings):
+
+    def check_input(self, input_data, expected_feeling, expected_feeling_index, list_of_feelings, text_table, text):
         return_val = False
 
         res = self.run_model(input_data)
+
         highest = [0, 0]
 
         for i in range(len(res)):
@@ -191,7 +209,16 @@ class GRU(Architecture):
             self.amount_false_feel_inv[highest[1]] += 1
             self.amount_false_feel[expected_feeling_index] += 1
 
+        params = (text, str(expected_feeling), list_of_feelings[highest[1]])
+        for i in range(len(res)):
+            params = params + (res[i],)
+        text_table.add_data(*params)
+
         return return_val
+
+    @staticmethod
+    def ascii_arr_to_text(ascii_array):
+        return ''.join([chr(int(val)) for val in ascii_array])
 
     def run_model_with_embedding(self, input_string):
         regex = re.compile(r'[^a-zA-Z\s]')
@@ -289,15 +316,29 @@ class GRU(Architecture):
 
     def save_parameters(self):
         dict_parameters = {}
+        file_name = "parameters_"+str(self.list_of_feelings)+".json"
         for key in self.layers_dict.keys():
             dict_parameters = self.layers_dict[key].save_parameters(dict_parameters)
-        with open("parameters_"+str(self.list_of_feelings)+".json", 'wb') as f:
+        with open(file_name, 'wb') as f:
             pickle.dump(dict_parameters, f, protocol=pickle.HIGHEST_PROTOCOL)
+        return file_name
 
     # train function
-    def train(self, train_dataset, test_dataset, epochs):
+    def train(self, train_dataset, test_dataset, batch_size, epochs, dataset_name="undefined"):
+        self.run = wandb.init(project="psychobot", entity="noamr", job_type="train", config={
+            "dataset": dataset_name,
+            "feelings": self.list_of_feelings,
+            "learning_rate": self.learning_rate,
+            "hidden_units": self.hidden_units,
+            "epochs": epochs,
+            "std": self.std,
+            "architecture": self.type.name,
+            "batch_size": batch_size
+        })
+
         valid = 0
         for i in range(epochs):
+            wandb.log({"epoch": i})
             batch_i = -1
             for batch in train_dataset:
                 batch_i += 1
@@ -317,12 +358,26 @@ class GRU(Architecture):
                 self.reset_per_nudge()
 
                 print('\r' + "Training 💪 - " + "{:.2f}".format(100 * (1+batch_i+len(train_dataset)*i)/(epochs*len(train_dataset))) + "% | batch: " + str(1+batch_i+len(train_dataset)*i) + "/" + str(epochs*len(train_dataset)), end="")
-            self.accuracy_test.append(self.test(test_dataset))
+            self.accuracy_test.append(self.test(test_dataset, i))
+            wandb.log({"accuracy_test": self.accuracy_test[-1]})
             if self.accuracy_test[-1] > valid:
                 valid = self.accuracy_test[-1]
                 self.save_parameters()
 
         print()
         self.print_graph(epochs, len(train_dataset[0]), self.accuracy_test)
-        self.save_parameters()
+
+        model_file_name = self.save_parameters()
+        dataset_path = './all-datasets/' + dataset_name + '/data.npy'
+        dataset_list_path = './all-datasets/' + dataset_name + '/list.json'
+
+        model = wandb.Artifact("psychobot-" + self.run.id, type='model')
+
+        model.add_file(model_file_name, name=("model/" + model_file_name))
+        model.add_file(dataset_path, name="dataset/data.npy")
+        model.add_file(dataset_list_path, name="dataset/list.json")
+
+        self.run.log_artifact(model)
+
+        wandb.finish()
         return self.accuracy_test

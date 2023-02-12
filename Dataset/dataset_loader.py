@@ -130,6 +130,8 @@ class Dataset:
                     inner_vector.append(words_arr)
                 inner_vector.append(res)
 
+                inner_vector.append(Dataset.text_to_ascii_arr(text))
+
                 vector.append(inner_vector.copy())
 
                 Dataset.last_count += 1
@@ -240,6 +242,14 @@ class Dataset:
         np.save(file_name, examples)
 
         return file_name, examples
+
+    @staticmethod
+    def text_to_ascii_arr(text):
+        return np.array([ord(char) for char in text])
+
+    @staticmethod
+    def ascii_arr_to_text(ascii_array):
+        return ''.join([chr(int(val)) for val in ascii_array])
 
 
 if __name__ == '__main__':

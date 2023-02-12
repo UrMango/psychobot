@@ -12,7 +12,7 @@ class Architecture:
     def __init__(self, arch_type):
         self.type = arch_type
 
-    def train(self, examples, iters):
+    def train(self, examples, test, batch_size, iters, dataset_name="undefined"):
         raise NotImplementedError
 
     def run_model(self, input_data):

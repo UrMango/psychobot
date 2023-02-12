@@ -9,6 +9,8 @@ import numpy as np
 import spacy
 import pickle
 
+import wandb
+
 from Dataset.dataset_loader import Dataset
 
 from NeuralNetwork.Architectures.Basic import Basic
@@ -96,17 +98,19 @@ def separate_dataset_to_batches(dataset, batch_size):
 
 def machine(answer, list_of_feelings, architecture, batch_size=60):
     ml = architecture
+    dataset = '30k-happy-sadness-anger'
 
     while True:
         if answer:
-            dataset_path, examples = Dataset.save_dataset(ArchitectureType.LSTM, EXAMPLES, 'data.npy', list_of_feelings)
-            with open('list.json', 'w') as f:
+            dataset_path, examples = Dataset.save_dataset(ArchitectureType.LSTM, EXAMPLES,
+                                                          'all-datasets/30k-happy-sadness-anger/data.npy', list_of_feelings)
+            with open('all-datasets/30k-happy-sadness-anger/list.json', 'w') as f:
                 json.dump(list_of_feelings, f)
         else:
-            examples = np.load('./all-datasets/30k-happy-sadness-anger/data.npy', allow_pickle=True)
+            examples = np.load('./all-datasets/' + dataset + '/data.npy', allow_pickle=True)
         examples = separate_dataset_to_batches(examples, batch_size)
         print("Hello! 😀 I'm PsychoBot.\nMy thing is sentiment analysis.\n")
-        accuracy_test = ml.train(examples[:int(len(examples) * TRAINING_SET_PERCENTAGE)], examples[int(len(examples) * TRAINING_SET_PERCENTAGE):], EPOCHS)
+        accuracy_test = ml.train(examples[:int(len(examples) * TRAINING_SET_PERCENTAGE)], examples[int(len(examples) * TRAINING_SET_PERCENTAGE):], batch_size, EPOCHS, dataset)
         print(accuracy_test)
         return accuracy_test
 
@@ -129,7 +133,7 @@ def main():
             "1 - Train the machine on prepared dataset\n2 - Train the machine on un-prepared dataset\n3 - Use working machine\n4 - I've seen enough")
         choice = int(input())
         if choice == 1:
-            with open('list.json', 'r') as f:
+            with open('all-datasets/30k-happy-sadness-anger/list.json', 'r') as f:
                 list_of_feelings = json.load(f)
             if arch == "LSTM":
                 machine(False, list_of_feelings, NEW_LSTM(list_of_feelings))
@@ -145,19 +149,34 @@ def main():
             accuracy = machine(True, list_of_feelings, GRU(list_of_feelings))
             print("Accuracy on validation set: " + str(100 * accuracy[-1]) + "%")
         elif choice == 3:
-            with open('list.json', 'r') as f:
+            # model_name = input("What model will you choose? (default: dutiful-microwave-9) ")
+            # if model_name == "":
+            #     model_name = "dutiful-microwave-9"
+            # with open('all-datasets/30k-happy-sadness-anger/list.json', 'r') as f:
+            #     list_of_feelings = json.load(f)
+            # print("This is now possible!!!")
+            # with open("models/" + model_name + "/parameters_"+str(list_of_feelings)+".json", 'rb') as f:
+            #     dict_parameters = pickle.load(f)
+            wandb.init(job_type="train")
+            artifact = wandb.use_artifact('noamr/model-registry/psychobot:latest', type='model')
+            artifact_dir = artifact.download("models/latest")
+
+            dict_parameters = None
+            list_of_feelings = []
+            with open(artifact_dir + '/dataset/list.json', 'r') as f:
                 list_of_feelings = json.load(f)
-            print("This is now possible!!!")
-            with open("parameters_"+str(list_of_feelings)+".json", 'rb') as f:
+            with open(artifact_dir + "/model/parameters_" + str(list_of_feelings) + ".json", 'rb') as f:
                 dict_parameters = pickle.load(f)
+
             ml = GRU(list_of_feelings, set_parameters=True, parameters=dict_parameters, embed=True)
+
             #examples = np.load('./all-datasets/30k-happy-sadness-anger/data.npy', allow_pickle=True)
             #print("Accuracy on validation set: "+str(100*ml.test(examples[int(len(examples) * TRAINING_SET_PERCENTAGE):]))+"%")
             sentence = ""
             while sentence != "Stop":
                 sentence = input("Write a sentence that you want the machine will check: ")
                 feeling, dict = ml.run_model_with_embedding(sentence)
-                print("Feeling: "+feeling)
+                print("Feeling: "+ feeling)
                 for feel in list_of_feelings:
                     print(feel + ": " + str(dict[feel]))
                 print("")
@@ -166,7 +185,7 @@ def main():
             print("Bye bye 👋")
         elif choice == 5:
             print("You enter the secret option")
-            with open('list.json', 'r') as f:
+            with open('all-datasets/30k-happy-sadness-anger/list.json', 'r') as f:
                 list_of_feelings = json.load(f)
             machine_with_params(list_of_feelings)
 
