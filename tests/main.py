@@ -157,7 +157,7 @@ def main():
             # print("This is now possible!!!")
             # with open("models/" + model_name + "/parameters_"+str(list_of_feelings)+".json", 'rb') as f:
             #     dict_parameters = pickle.load(f)
-            wandb.init(job_type="train")
+            wandb.init(job_type="run")
             artifact = wandb.use_artifact('noamr/model-registry/psychobot:latest', type='model')
             artifact_dir = artifact.download("models/latest")
 
