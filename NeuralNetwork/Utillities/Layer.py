@@ -20,7 +20,7 @@ class Layer:
     # def forward_propagation(self, output_layers_dict, time):
     #     raise NotImplementedError
 
-    def nudge(self, nudge_layers_dict, learning_rate, batch_len):
+    def nudge(self, nudge_layers_dict, learning_rate, beta1, beta2, epsilon, batch_len):
         raise NotImplementedError
 
     def save_parameters(self, parameters_dict):

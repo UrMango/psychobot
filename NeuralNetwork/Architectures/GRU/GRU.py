@@ -23,15 +23,17 @@ Architecture = Architecture.Architecture
 INPUT_UNITS = 25
 
 # beta1 for V parameters used in Adam Optimizer
-beta1 = 0.90
+BETA1 = 0.90
 
 # beta2 for S parameters used in Adam Optimizer
-beta2 = 0.99
+BETA2 = 0.99
+
+EPSILON = 0.000000001
 
 
 class GRU(Architecture):
     # Constructor
-    def __init__(self, list_of_feelings, hidden_units=256, learning_rate=1, std=0.01, embed=False, set_parameters=False, parameters={}):
+    def __init__(self, list_of_feelings, hidden_units=256, learning_rate=1, std=0.01, beta1=BETA1, beta2=BETA2, embed=False, set_parameters=False, parameters={}):
         super().__init__(ArchitectureType.GRU)
 
         self.run = None
@@ -48,6 +50,9 @@ class GRU(Architecture):
         self.list_of_feelings = list_of_feelings
         self.hidden_units = hidden_units
         self.learning_rate = learning_rate
+        self.beta1 = beta1
+        self.beta2 = beta2
+        self.epsilon = EPSILON
         self.accuracy_test = []
 
         self.output_layers_dict = {}
@@ -61,6 +66,7 @@ class GRU(Architecture):
             self.amount_false_feel.append(0)
             self.amount_false_feel_inv.append(0)
 
+        self.layers_dict = {}
         self.layers_dict = {}
         logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
         self.initialize_layers()
@@ -156,7 +162,7 @@ class GRU(Architecture):
 
     def update_parameters(self, size):
         for key in self.layers_dict.keys():
-            self.layers_dict[key].nudge(self.nudge_layers_dict, self.learning_rate, size)
+            self.layers_dict[key].nudge(self.nudge_layers_dict, self.learning_rate, self.beta1, self.beta2, self.epsilon, size)
 
     def run_model(self, input_data):
         output = self.forward_propagation(input_data)
@@ -325,15 +331,19 @@ class GRU(Architecture):
 
     # train function
     def train(self, train_dataset, test_dataset, batch_size, epochs, dataset_name="undefined"):
-        self.run = wandb.init(project="psychobot", entity="noamr", job_type="train", config={
+        note = input("Any notes for the training? (e.g. Adam optimizer test)")
+
+        self.run = wandb.init(project="psychobot", entity="noamr", job_type="train", notes=note, config={
             "dataset": dataset_name,
             "feelings": self.list_of_feelings,
-            "learning_rate": self.learning_rate,
             "hidden_units": self.hidden_units,
             "epochs": epochs,
             "std": self.std,
             "architecture": self.type.name,
-            "batch_size": batch_size
+            "batch_size": batch_size,
+            "learning_rate": self.learning_rate,
+            "beta1": self.beta1,
+            "beta2": self.beta2
         })
 
         valid = 0

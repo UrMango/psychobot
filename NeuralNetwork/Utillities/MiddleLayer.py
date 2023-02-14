@@ -9,6 +9,12 @@ class MiddleLayer(Layer):
 		self.input = None
 		self.inputs_id = _inputs_id
 		self.id = _id
+
+		self.m_weights = []
+		self.v_weights = []
+		self.m_bias = None
+		self.v_bias = None
+
 		self.weights = []
 		self.num_of_inputs = len(input_units)
 		self.output_size = output_size
@@ -23,7 +29,11 @@ class MiddleLayer(Layer):
 		else:
 			for i in range(self.num_of_inputs):
 				self.weights.append(np.random.normal(mean, std, (input_units[i], output_size)))
+				self.m_weights.append(np.zeros((input_units[i], output_size)))
+				self.v_weights.append(np.zeros((input_units[i], output_size)))
 			self.bias = np.random.normal(mean, std, (1, output_size))
+			self.m_bias = np.zeros((1, output_size))
+			self.v_bias = np.zeros((1, output_size))
 		self.type = LayerType.MIDDLE
 
 	def forward_propagation(self, output_layers_dict, t):
@@ -98,14 +108,29 @@ class MiddleLayer(Layer):
 		self.input = []
 		return nudge_layers_dict
 
-	def nudge(self, nudge_layers_dict, learning_rate, batch_len):
+	def nudge(self, nudge_layers_dict, learning_rate, beta1, beta2, epsilon, batch_len):
+		mhat_weights = []
+		vhat_weights = []
+
 		for i in range(self.num_of_inputs):
 			if self.inputs_id[i][-1] == "-":
 				key = "d" + self.id + self.inputs_id[i][:-1] + "w"
 			else:
 				key = "d" + self.id + self.inputs_id[i] + "w"
-			self.weights[i] -= nudge_layers_dict[key] * learning_rate * (1/batch_len)
-		self.bias -= nudge_layers_dict["d" + self.id + "b"] * learning_rate * (1/batch_len)
+			self.m_weights[i] = beta1 * self.m_weights[i] + (1-beta1) * nudge_layers_dict[key]
+			self.v_weights[i] = beta2 * self.v_weights[i] + (1-beta2) * np.power(nudge_layers_dict[key], 2) 
+
+			mhat_weights.append(self.m_weights[i] * (1 / (1-beta1)))
+			vhat_weights.append(self.v_weights[i] * (1 / (1-beta2)))
+
+			self.weights[i] -= learning_rate * (1/batch_len) * np.divide(mhat_weights[i], (np.sqrt(vhat_weights[i])+epsilon))
+		self.m_bias = beta1 * self.v_bias + (1 - beta1) * nudge_layers_dict["d" + self.id + "b"]
+		self.v_bias = beta2 * self.v_bias + (1 - beta2) * np.power(nudge_layers_dict["d" + self.id + "b"], 2)
+
+		mhat_bias = self.m_bias * (1 / (1 - beta1))
+		vhat_bias = self.v_bias * (1 / (1 - beta2))
+
+		self.bias -= learning_rate * (1 / batch_len) * np.divide(mhat_bias, (np.sqrt(vhat_bias) + epsilon))
 		return
 
 	def save_parameters(self, parameters_dict):

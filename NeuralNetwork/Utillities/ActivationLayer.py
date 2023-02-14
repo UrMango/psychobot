@@ -36,7 +36,7 @@ class ActivationLayer(Layer):
 		self.input = None
 		return nudge_layers_dict
 
-	def nudge(self, nudge_layers_dict, learning_rate, batch_len):
+	def nudge(self, nudge_layers_dict, learning_rate, beta1, beta2, epsilon, batch_len):
 		pass
 
 	def save_parameters(self, parameters_dict):
