@@ -37,9 +37,12 @@ nlp = spacy.load("en_core_web_sm")
 
 
 def machine_with_params(list_of_feelings):
-    learning_rates = [1, 0.1]
+    learning_rates = [1, 0.1, 0.01]
     batch_sizes = [60, 100]
     hidden_units = [350, 150]
+
+    beta1_values = [0.95, 0.9, 0.85]
+    beta2_values = [0.999, 0.99, 0.95]
 
     rates = []
     sizes = []
@@ -65,18 +68,32 @@ def machine_with_params(list_of_feelings):
     #     for key in dict_params.keys():
     #         print(key + str(dict_params[key]) + "%")
 
+    #    print('\n↓↓↓  LEARNING RATE: ' + str(rate) + ' ↓↓↓')
+    #    for unit in hidden_units:
+    #        print('\n↓↓↓ HIDDEN: ' + str(unit) + ' ↓↓↓')
+    #        accuracy_test = machine(True, list_of_feelings, GRU(list_of_feelings, learning_rate=rate, hidden_units=unit), batch_size=60)
+    #        for i in range(EPOCHS):
+    #            dict_params[
+    #                "hidden: " + str(unit) + ", learning rate: " + str(rate) + ", epoch: " + str(i) + " - "] = 100 * \
+    #                                                                                                               accuracy_test[
+    #                                                                                                                   i]
+    #            print("hidden: " + str(unit) + ", learning rate: " + str(rate) + ", epoch: " + str(i) + " - " + str(
+    #                100 * accuracy_test[i]) + "%")
+    #    print("\nTOTAL PERCENTS")
+    #    for key in dict_params.keys():
+    #        print(key + str(dict_params[key]) + "%")
+
     for rate in learning_rates:
         print('\n↓↓↓  LEARNING RATE: ' + str(rate) + ' ↓↓↓')
-        for unit in hidden_units:
-            print('\n↓↓↓ HIDDEN: ' + str(unit) + ' ↓↓↓')
-            accuracy_test = machine(True, list_of_feelings, GRU(list_of_feelings, learning_rate=rate, hidden_units=unit), batch_size=60)
-            for i in range(EPOCHS):
-                dict_params[
-                    "hidden: " + str(unit) + ", learning rate: " + str(rate) + ", epoch: " + str(i) + " - "] = 100 * \
-                                                                                                                   accuracy_test[
-                                                                                                                       i]
-                print("hidden: " + str(unit) + ", learning rate: " + str(rate) + ", epoch: " + str(i) + " - " + str(
-                    100 * accuracy_test[i]) + "%")
+        for value1 in beta1_values:
+            print('\n↓↓↓ BETA1 VALUE: ' + str(value1) + ' ↓↓↓')
+            for value2 in beta2_values:
+                accuracy_test = machine(True, list_of_feelings, GRU(list_of_feelings, learning_rate=rate, beta1=value1, beta2=value2), batch_size=60)
+                for i in range(EPOCHS):
+                    dict_params[
+                        "beta1: " + str(value1) + ", beta2: " + str(value2)+", learning rate: " + str(rate) + ", epoch: " + str(i) + " - "] = 100 * accuracy_test[i]
+                    print("beta1: " + str(value1) + ", beta2: " + ", learning rate: " + str(rate) + ", epoch: " + str(i) + " - " + str(
+                        100 * accuracy_test[i]) + "%")
         print("\nTOTAL PERCENTS")
         for key in dict_params.keys():
             print(key + str(dict_params[key]) + "%")
