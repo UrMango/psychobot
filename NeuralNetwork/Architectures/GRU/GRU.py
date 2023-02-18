@@ -179,6 +179,8 @@ class GRU(Architecture):
 
         text_table = wandb.Table(columns=cols)
 
+        confusion_matrix = np.zeros((len(self.list_of_feelings), len(self.list_of_feelings)))
+
         for batch in examples:
             for example in batch:
                 ls = []
@@ -188,7 +190,8 @@ class GRU(Architecture):
                     if i > 0:
                         if ls[i] > ls[i - 1]:
                             up_index = i
-                if self.check_input(example[0], self.list_of_feelings[up_index], up_index, self.list_of_feelings, text_table, GRU.ascii_arr_to_text(example[2])):
+                return_value, confusion_matrix = self.check_input(confusion_matrix, example[0], self.list_of_feelings[up_index], up_index, self.list_of_feelings, text_table, GRU.ascii_arr_to_text(example[2]))
+                if return_value:
                     amount_true += 1
                 test_len += 1
 
@@ -196,7 +199,7 @@ class GRU(Architecture):
         wandb.log({name: text_table})
         return amount_true / test_len
 
-    def check_input(self, input_data, expected_feeling, expected_feeling_index, list_of_feelings, text_table, text):
+    def check_input(self, confusion_matrix, input_data, expected_feeling, expected_feeling_index, list_of_feelings, text_table, text):
         return_val = False
 
         res = self.run_model(input_data)
@@ -207,7 +210,7 @@ class GRU(Architecture):
             if res[i] > highest[0]:
                 highest[0] = res[i]
                 highest[1] = i
-
+        confusion_matrix[expected_feeling_index][highest[1]] += 1
         if str(list_of_feelings[highest[1]]) == str(expected_feeling):
             self.amount_true_feel[highest[1]] += 1
             return_val = True
@@ -220,7 +223,7 @@ class GRU(Architecture):
             params = params + (res[i],)
         text_table.add_data(*params)
 
-        return return_val
+        return return_val, confusion_matrix
 
     @staticmethod
     def ascii_arr_to_text(ascii_array):
