@@ -31,11 +31,16 @@ beta2 = 0.99
 
 class NEW_LSTM(Architecture):
     # Constructor
-    def __init__(self, list_of_feelings, hidden_units=256, learning_rate=0.001, std=0.01, embed=False):
+    def __init__(self, list_of_feelings, hidden_units=256, learning_rate=1, std=0.01, beta1=BETA1, beta2=BETA2, embed=False, set_parameters=False, parameters={}):
         super().__init__(ArchitectureType.NEW_LSTM)
+
+        self.run = None
 
         self.loss = []
         self.accuracy = []
+
+        self.set_parameters = set_parameters
+        self.parameters = parameters
 
         self.std = std
         self.input_units = INPUT_UNITS
@@ -43,10 +48,23 @@ class NEW_LSTM(Architecture):
         self.list_of_feelings = list_of_feelings
         self.hidden_units = hidden_units
         self.learning_rate = learning_rate
+        self.beta1 = beta1
+        self.beta2 = beta2
+        self.epsilon = EPSILON
+        self.accuracy_test = []
 
         self.output_layers_dict = {}
         self.nudge_layers_dict = {}
 
+        self.amount_true_feel = []
+        self.amount_false_feel = []
+        self.amount_false_feel_inv = []
+        for feel in list_of_feelings:
+            self.amount_true_feel.append(0)
+            self.amount_false_feel.append(0)
+            self.amount_false_feel_inv.append(0)
+
+        self.layers_dict = {}
         self.layers_dict = {}
         logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
         self.initialize_layers()
@@ -58,10 +76,10 @@ class NEW_LSTM(Architecture):
         mean = 0
         # maybe add some kind of params that you can set from the start
 
-        self.layers_dict["fr"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std,  "fr", ["h-", "x"])
-        self.layers_dict["ir"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std,  "ir", ["h-", "x"])
-        self.layers_dict["cr"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std,  "cr", ["h-", "x"])
-        self.layers_dict["or"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std,  "or", ["h-", "x"])
+        self.layers_dict["fr"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std,  "fr", ["h-", "x"], self.set_parameters, self.parameters)
+        self.layers_dict["ir"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std,  "ir", ["h-", "x"], self.set_parameters, self.parameters)
+        self.layers_dict["cr"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std,  "cr", ["h-", "x"], self.set_parameters, self.parameters)
+        self.layers_dict["or"] = MiddleLayer([self.hidden_units, self.input_units], self.hidden_units, self.std,  "or", ["h-", "x"], self.set_parameters, self.parameters)
 
         self.layers_dict["f"] = ActivationLayer(Sigmoid.sigmoid, Sigmoid.derivative_sigmoid_by_func, "f", ["fr"])
         self.layers_dict["i"] = ActivationLayer(Sigmoid.sigmoid, Sigmoid.derivative_sigmoid_by_func, "i", ["ir"])
@@ -77,7 +95,7 @@ class NEW_LSTM(Architecture):
 
         self.layers_dict["h"] = MultiplyLayer("h", ["o", "thC"])
 
-        self.layers_dict["sr"] = MiddleLayer([self.hidden_units], self.output_units, self.std,  "sr", ["h"])
+        self.layers_dict["sr"] = MiddleLayer([self.hidden_units], self.output_units, self.std,  "sr", ["h"], self.set_parameters, self.parameters)
         self.layers_dict["s"] = SoftmaxLayer("s", ["sr"])
 
     def reset_per_example(self):
