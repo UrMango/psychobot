@@ -22,6 +22,23 @@ The processed data is then fed into the model for training. During training, the
 - Training progress tracked using the Weights and Biases website
 - Includes an API code and a website
 
+## Installation
+
+To use PsychoBot, follow these steps:
+
+1. Clone the repository
+2. Install Python and the required libraries via pip:
+   - numpy
+   - spacy
+   - pickle
+   - wandb
+   - gensim
+   - pandas
+3. Install Node.js
+4. Navigate to the website folder and run `npm install` in the terminal to install all the required libraries for the website
+5. Run the file `main.py` in the API folder to activate the API
+6. In the website folder, run `npm run dev` in the terminal to run the website.
+
 ## Learning Journey
 
 Throughout the development of this project, I have been learning and improving my knowledge of the mathematical topics required for machine learning and neural networks. This includes topics such as linear algebra, calculus, probability, and statistics.
