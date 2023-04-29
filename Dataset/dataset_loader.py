@@ -12,7 +12,7 @@ EXACT_PATH = r'hadera-801-psychobot\Dataset\final_dataset.csv'
 
 class Dataset:
     path = r'E:\GitHub'
-    #path = r'C:\Users\magshimim\Documents\Magshimim\Psychobot'
+    # path = r'C:\Users\magshimim\Documents\Magshimim\Psychobot'
 
     df = pd.read_csv(path + "\\" + EXACT_PATH)
 
@@ -28,7 +28,7 @@ class Dataset:
 		:return:
 		"""
         model = Dataset.get_model()
-
+        print("model loaded")
         emotions_count = []
         for i in range(len(list_of_feelings)):
             emotions_count.append(0)

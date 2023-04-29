@@ -29,7 +29,7 @@ EPOCHS = 15
 
 NUMBER_OF_EXAMPLES_IN_BATCH = 100
 
-EXAMPLES = 25000
+EXAMPLES = 2000
 
 TRAINING_SET_PERCENTAGE = 0.8
 
@@ -144,7 +144,7 @@ def main():
     choice = 0
     ml = None
     while choice != 3:
-        print("The battle for the Throne of AI awaits, LSTM or OldGRU, which memory will you choose to lead your army?")
+        print("The battle for the Throne of AI awaits, LSTM or GRU, which memory will you choose to lead your army?")
         arch = input()
         print(
             "1 - Train the machine on prepared dataset\n2 - Train the machine on un-prepared dataset\n3 - Use working machine\n4 - I've seen enough")
@@ -153,7 +153,8 @@ def main():
             with open('all-datasets/30k-happy-sadness-anger/list.json', 'r') as f:
                 list_of_feelings = json.load(f)
             if arch == "LSTM":
-                machine(False, list_of_feelings, NEW_LSTM(list_of_feelings))
+                accuracy = machine(False, list_of_feelings, NEW_LSTM(list_of_feelings))
+                print("Accuracy on validation set: " + str(100 * accuracy[-1]) + "%")
             if arch == "GRU":
                 accuracy = machine(False, list_of_feelings, GRU(list_of_feelings))
                 print("Accuracy on validation set: " + str(100*accuracy[-1]) + "%")
@@ -187,8 +188,8 @@ def main():
 
             ml = GRU(list_of_feelings, set_parameters=True, parameters=dict_parameters, embed=True)
 
-            #examples = np.load('./all-datasets/30k-happy-sadness-anger/data.npy', allow_pickle=True)
-            #print("Accuracy on validation set: "+str(100*ml.test(examples[int(len(examples) * TRAINING_SET_PERCENTAGE):]))+"%")
+            # examples = np.load('./all-datasets/30k-happy-sadness-anger/data.npy', allow_pickle=True)
+            # print("Accuracy on validation set: "+str(100*ml.test(examples[int(len(examples) * TRAINING_SET_PERCENTAGE):]))+"%")
             sentence = ""
             while sentence != "Stop":
                 sentence = input("Write a sentence that you want the machine will check: ")

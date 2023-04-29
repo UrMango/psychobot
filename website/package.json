@@ -6,10 +6,16 @@
     "start": "next start"
   },
   "dependencies": {
+    "@nivo/line": "^0.80.0",
+    "@types/papaparse": "^5.3.7",
+    "bootstrap": "^5.2.3",
     "firebase": "^9.15.0",
     "next": "latest",
+    "papaparse": "^5.4.0",
     "react": "18.2.0",
-    "react-dom": "18.2.0"
+    "react-bootstrap": "^2.7.4",
+    "react-dom": "18.2.0",
+    "react-select": "^5.7.2"
   },
   "devDependencies": {
     "@types/node": "18.11.3",

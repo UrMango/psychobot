@@ -33,9 +33,10 @@ EPSILON = 0.000000001
 
 class GRU(Architecture):
     # Constructor
-    def __init__(self, list_of_feelings, hidden_units=256, learning_rate=1, std=0.01, beta1=BETA1, beta2=BETA2, embed=False, set_parameters=False, parameters={}):
+    arrayInstances = []
+    def __init__(self, list_of_feelings, hidden_units=256, learning_rate=1, std=0.01, beta1=BETA1, beta2=BETA2, embed=False, set_parameters=False, parameters={}, _nlp = None, _model = None):
         super().__init__(ArchitectureType.GRU)
-
+        GRU.arrayInstances.append(self)
         self.run = None
 
         self.loss = []
@@ -47,7 +48,7 @@ class GRU(Architecture):
         self.std = std
         self.input_units = INPUT_UNITS
         self.output_units = len(list_of_feelings)
-        self.list_of_feelings = list_of_feelings
+        self.list_of_feelings = sorted(list_of_feelings)
         self.hidden_units = hidden_units
         self.learning_rate = learning_rate
         self.beta1 = beta1
@@ -57,6 +58,7 @@ class GRU(Architecture):
 
         self.output_layers_dict = {}
         self.nudge_layers_dict = {}
+        self.percent = 0
 
         self.amount_true_feel = []
         self.amount_false_feel = []
@@ -70,9 +72,12 @@ class GRU(Architecture):
         self.layers_dict = {}
         logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
         self.initialize_layers()
-        if embed:
+        if embed and _nlp is None and _model is None:
             self.nlp = spacy.load("en_core_web_sm")
             self.model = downloader.load('glove-twitter-25')
+        elif embed:
+            self.nlp = _nlp
+            self.model = _model
 
     def initialize_layers(self):
         mean = 0
@@ -334,7 +339,7 @@ class GRU(Architecture):
 
     # train function
     def train(self, train_dataset, test_dataset, batch_size, epochs, dataset_name="undefined"):
-        note = input("Any notes for the training? (e.g. Adam optimizer test)")
+        note = "" # input("Any notes for the training? (e.g. Adam optimizer test)")
 
         self.run = wandb.init(project="psychobot", entity="noamr", job_type="train", notes=note, config={
             "dataset": dataset_name,
@@ -371,6 +376,7 @@ class GRU(Architecture):
                 self.reset_per_nudge()
 
                 print('\r' + "Training 💪 - " + "{:.2f}".format(100 * (1+batch_i+len(train_dataset)*i)/(epochs*len(train_dataset))) + "% | batch: " + str(1+batch_i+len(train_dataset)*i) + "/" + str(epochs*len(train_dataset)), end="")
+                self.percent = 100 * (1+batch_i+len(train_dataset)*i)/(epochs*len(train_dataset))
             self.accuracy_test.append(self.test(test_dataset, i))
             wandb.log({"accuracy_test": self.accuracy_test[-1]})
             if self.accuracy_test[-1] > valid:
@@ -378,19 +384,25 @@ class GRU(Architecture):
                 self.save_parameters()
 
         print()
-        self.print_graph(epochs, len(train_dataset[0]), self.accuracy_test)
+        # self.print_graph(epochs, len(train_dataset[0]), self.accuracy_test)
 
         model_file_name = self.save_parameters()
         dataset_path = './all-datasets/' + dataset_name + '/data.npy'
         dataset_list_path = './all-datasets/' + dataset_name + '/list.json'
 
-        model = wandb.Artifact("psychobot-" + self.run.id, type='model')
+        artifact = wandb.Artifact("psychobot-" + self.run.id, type='model')
 
-        model.add_file(model_file_name, name=("model/" + model_file_name))
-        model.add_file(dataset_path, name="dataset/data.npy")
-        model.add_file(dataset_list_path, name="dataset/list.json")
+        artifact.add_file(model_file_name, name=("model/" + model_file_name))
+        artifact.add_file(dataset_path, name="dataset/data.npy")
+        artifact.add_file(dataset_list_path, name="dataset/list.json")
 
-        self.run.log_artifact(model)
+        artifact = self.run.log_artifact(artifact)
+
+        self.run.link_artifact(
+            artifact,
+            str(self.type.name.lower() + '-' + str(self.list_of_feelings).replace(", ", ""))
+        )
 
         wandb.finish()
+        GRU.arrayInstances.remove(self)
         return self.accuracy_test
