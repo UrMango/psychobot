@@ -17,10 +17,6 @@ class Sigmoid:
 		return 1 / (1+np.exp(-1*x))
 
 	@staticmethod
-	def inverse_sigmoid(x):
-		return np.log(x/1-x)
-
-	@staticmethod
 	def derivative_sigmoid_by_func(sig):
 		return sig * (1-sig)
 
@@ -30,10 +26,6 @@ class Softmax:
 	def softmax(x):
 		x = x - np.max(x)
 		return np.exp(x) / np.sum(np.exp(x))
-
-	@staticmethod
-	def inverse_softmax(x):
-		return np.log(x / 1 - x)
 
 	@staticmethod
 	def derivative_softmax_and_log_by_func(s):

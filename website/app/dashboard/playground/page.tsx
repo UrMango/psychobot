@@ -5,8 +5,6 @@ import { ResponsiveLine, Serie } from '@nivo/line';
 import Papa from 'papaparse';
 import { useSearchParams } from 'next/navigation';
 import Select from 'react-select';
-import Result from '../(components)/Results';
-import ProgressBar from 'react-bootstrap/ProgressBar';
 
 
 const Playground = () => {
@@ -26,9 +24,7 @@ const Playground = () => {
 
   const [currentArch, setCurrentArch] = useState<string>("GRU");
   const [isLoading, setIsLoading] = useState(false);
-  const [isTraining, setIsTraining] = useState(false);
-  const [trainingPercents, setTrainingPercents] = useState(false);
-
+  
   const [existResult, setExistResult] = useState(0);
   const [trainCustom, setTrainCustom] = useState(false);
 
@@ -63,35 +59,11 @@ const Playground = () => {
   const architectureChosen = (e:any) => {
     setCurrentArch(e.target.innerText);
     checkIfModelExist(e.target.innerText, emotionsChosen);
-    let array : Serie[] = [];
-    try {
-      Papa.parse("/assets/" + e.target.innerText + "-accuracy.csv", {
-        download: true,
-        complete: function(results) {
-          const data : any = results.data;
-          
-          let final = []
-          for(let i = 1; i < data.length - 1; i++) {
-            final.push({x: i, y: data[i][1]});
-          }
-          const nivoData = {
-            id: e.target.innerText,
-            color: "hsl(54, 70%, 50%)",
-            data: final
-          }
-          array.push(nivoData);
-          setData(array);
-        }
-      });
-    } catch (error) {
-      console.error(error);
-    }
   }
 
   const checkIfModelExist = async (currentArch:string, feelings:Array<string>) => {
     const res = await fetch("http://localhost:8080/is_exist?arch=" + currentArch + "&feelings=" + JSON.stringify(feelings));
     const responseJson = await res.json();
-    console.log(responseJson);
     setExistResult(responseJson.res.is_exist)
    } 
 
@@ -143,40 +115,41 @@ const Playground = () => {
     setResult(0);
     setReliabilities(null);
     
+    let array : Serie[] = [];
+    try {
+      Papa.parse("/assets/"+currentArch+"-"+JSON.stringify(emotionsChosen)+"accuracy.csv", {
+        download: true,
+        complete: function(results) {
+          const data : any = results.data;
+          
+          let final = []
+          for(let i = 1; i < data.length - 1; i++) {
+            final.push({x: i, y: data[i][1]});
+          }
+          const nivoData = {
+            id: currentArch,
+            color: "hsl(54, 70%, 50%)",
+            data: final
+          }
+          array.push(nivoData);
+          setData(array);
+        }
+      });
+    } catch (error) {
+      
+    }
+    
     const anotherRes = await fetch("http://localhost:8080/sentiment?arch=" + currentArch + "&feelings=" + JSON.stringify(emotionsChosen)+ "&sentence=" + text);
     const json = await anotherRes.json();
     if(json?.res) {
       let reliabilities:any = [];
-      
-      if(json.res.reliability?.anger && json.res.reliability?.happy && json.res.reliability?.sadness) {
-        const switches : any = {
-          anger: "Happy",
-          sadness: "Anger",
-          happy: "Sadness"
-        };
-        console.log(json.res);
-        json.res.feeling = switches[json.res.feeling];
-        const happy = json.res.reliability?.anger;
-        json.res.reliability.anger = json.res.reliability.sadness;
-        json.res.reliability.sadness = json.res.reliability.happy;
-        json.res.reliability.happy = happy;
-      }
 
       Object.keys(json.res?.reliability).forEach((key) => {
         console.log(key, json.res?.reliability[key])
-        const precent = (json.res?.reliability[key] * 100).toFixed(2);
-
-        reliabilities.push(
-          <div className='flex flex-col items-center justify-center'>
-            <div style={{background: "linear-gradient(#00000000 " + Math.round(100 - Number(precent)).toString() + "%, #ff8426 " + Math.round(100 - Number(precent)).toString() + "%)"}} className='rounded-full w-[5rem] h-[5rem] border-solid border-2 border-white flex justify-center items-center'>
-              <div className='text-center'>{precent}%</div>
-            </div>
-            <p className='text-center font-semibold'>{key}</p>
-          </div>
-        )
+        reliabilities.push(<p>{key}: {json.res?.reliability[key]}</p>)
       });
       setReliabilities(reliabilities);
-      setReliabilities(reliabilities);
+
       setResult(json.res);
     }
   }
@@ -187,15 +160,11 @@ const Playground = () => {
         {
           trainCustom &&
           <div className="w-1/3 h-1/4 bg-white pointer-events-auto flex flex-col gap-2 items-center justify-center" style={isDark ? {color: "white", backgroundColor: "black", border: "1px solid white"} : {border: "1px solid black"}}>
-            <h1 className='text-2xl'><b>Train Custom Model</b></h1>
-            <p><b>Architecture</b>: {currentArch}, <b>Feelings</b>: {JSON.stringify(emotionsChosen)}</p>
+            <h1>Train Custom Model</h1>
+            <p>Architecture: {currentArch}, Feelings: {JSON.stringify(emotionsChosen)}</p>
             <input className='rounded-md p-2 pointer-events-auto' style={isDark ? {color: "white", backgroundColor: "black", border: "1px solid white"} : {border: "1px solid black"}} placeholder={'Number of examples: ' + countMaxExamples(emotionsChosen)} onChange={(e) => setNumOfExamples(e.target.value)}/>
-            {isTraining && <>
-              <p>Training...</p>
-              <ProgressBar className=' w-full z-[99999]' visuallyHidden={false} striped now={45} />
-            </>}
             <h3 onClick={async () => {
-              setIsTraining(true);
+              setTrainCustom(false);
               const anotherRes = await fetch("http://localhost:8080/train-custom?arch=" + currentArch + "&feelings=" + JSON.stringify(emotionsChosen)+ "&num_of_examples=" + numOfExamples);
               console.log(anotherRes.json());
             }} className="p-2 cursor-pointer pointer-events-auto" style={isDark ? {color: "white", backgroundColor: "black", border: "1px solid white"} : {border: "1px solid black"}}>Train</h3>
@@ -239,14 +208,17 @@ const Playground = () => {
             
           <button className='rounded-xl p-2 font-medium' style={isDark ? {color: "white", backgroundColor: "black", border: "3px solid white"} : {border: "3px solid rgb(219 219 219)", backgroundColor: "#f1f3f4"}} onClick={click}>Get Result</button>
 
-          {(result != null && result != 0) ? 
-              <Result reliabilities={reliabilities} result={result} />
-              :
-            <div className='p-2' style={isDark ? {color: "white", backgroundColor: "black", border: "1px solid white"} : {border: "2px solid rgb(219 219 219)"}}>
-              {result == 0 && <p>Loading...</p>}
-              {result == null && <p>Results will be here</p>}
-            </div> 
-            }  
+          <div className='p-2' style={isDark ? {color: "white", backgroundColor: "black", border: "1px solid white"} : {border: "2px solid rgb(219 219 219)"}}>
+            {result != null && result != 0 && <>
+              Results:
+              <p>Sentence: {result?.sentence}</p>
+              <p>Feeling: {result?.feeling}</p>
+              <p>Reliability:</p>
+              {reliabilities} 
+              </>} 
+            {result == 0 && <p>Loading...</p>}
+            {result == null && <p>Results will be here</p>}
+          </div>
         </div>
         <div className='w-full flex flex-col items-center'>
           <h2 className='font-semibold text-2xl' style={isDark ? {color: "white"} : {}}>Architectures Comparison</h2>

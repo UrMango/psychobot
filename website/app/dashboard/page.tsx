@@ -21,6 +21,20 @@ const Dashboard = () => {
     if(json?.res) {
       let reliabilities:any = [];
 
+      if(json.res.reliability?.anger && json.res.reliability?.happy && json.res.reliability?.sadness) {
+        const switches : any = {
+          anger: "Happy",
+          sadness: "Anger",
+          happy: "Sadness"
+        };
+        console.log(json.res);
+        json.res.feeling = switches[json.res.feeling];
+        const happy = json.res.reliability?.anger;
+        json.res.reliability.anger = json.res.reliability.sadness;
+        json.res.reliability.sadness = json.res.reliability.happy;
+        json.res.reliability.happy = happy;
+      }
+      
       Object.keys(json.res?.reliability).forEach((key) => {
         console.log(key, json.res?.reliability[key])
         const precent = (json.res?.reliability[key] * 100).toFixed(2);

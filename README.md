@@ -4,12 +4,11 @@ This project is a sentiment analysis AI built from scratch in Python, without us
 
 ## Description
 
-The sentiment analysis AI is a machine learning model that takes text data as input and predicts the sentiment of the text. The AI is built using object-oriented programming (OOP), Layers, and RNN base with GRU and LSTM. 
+The sentiment analysis AI is a machine learning model that takes text data as input and predicts the sentiment of the text. The AI is built using object-oriented programming (OOP), Layers, and RNN base with GRU and LSTM.
 
 The model is trained on a large dataset of labeled text data that includes a variety of feelings such as happiness, sadness, anger, and more. During training, the model learns to predict the specific feeling conveyed by the text, instead of just positive, negative, or neutral sentiment.
 
 The processed data is then fed into the model for training. During training, the model's parameters are saved and can be loaded for future use. The training progress is also tracked using the Weights and Biases website to monitor the model's performance and improve its accuracy.
-
 
 ## Features
 
@@ -56,8 +55,9 @@ The sentiment analysis AI can be used in a variety of ways, including:
 To use the sentiment analysis AI, users can input their text data into the API or the website, and the AI will predict the specific feeling conveyed by the text.
 
 ## Resources
+
 ### Datasets:
+
 - [Go Emotions: Google Emotions Dataset by SHIVAM BANSA](https://www.kaggle.com/datasets/shivamb/go-emotions-google-emotions-dataset)
 - [Emotions in text by ISHANT](https://www.kaggle.com/datasets/ishantjuyal/emotions-in-text)
 - [Emotion Detection from Text by PASHUPATI GUPTA](https://www.kaggle.com/datasets/pashupatigupta/emotion-detection-from-text)
-
